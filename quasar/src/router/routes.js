@@ -1,14 +1,9 @@
 
 const routes = [
   {
-    path: '/',
-    component: () => import('layouts/MainLayout.vue'),
+    path: '/welcome',
+    component: () => import('layouts/GuestLayout.vue'),
     children: [
-      {
-        path: '',
-        name: 'home',
-        component: () => import('pages/IndexPage.vue')
-      },
       {
         path: 'signup',
         name: 'signup',
@@ -19,6 +14,17 @@ const routes = [
         name: 'signin',
         component: () => import('pages/SigninPage.vue')
       },
+    ]
+  },
+  {
+    path: '/',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'home',
+        component: () => import('pages/IndexPage.vue')
+      }
     ]
   },
 

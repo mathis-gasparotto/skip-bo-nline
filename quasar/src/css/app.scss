@@ -1,2 +1,5 @@
 // app global css in SCSS form
+@import 'quasar.variables';
 @import 'common/global';
+@import 'common/button';
+@import 'common/form';
