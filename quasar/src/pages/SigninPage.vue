@@ -52,7 +52,7 @@
         padding="sm 50px"
         size="18px"
         :disable="!validate"
-        :class="`form-btn btn btn-${validate ? 'secondary' : 'disabled'}`"
+        :class="`form-btn btn btn-${validate ? 'primary' : 'disabled'}`"
       />
     </q-form>
     <q-card flat>
@@ -70,7 +70,7 @@
 </template>
 
 <script>
-import { Notify } from 'quasar'
+import { Notify, LocalStorage } from 'quasar'
 
 export default {
   name: 'SigninPage',
@@ -113,6 +113,8 @@ export default {
           // this.form.password
 
           // .then(() => {
+            setTimeout(() => {
+              LocalStorage.set('token', 'token')
               this.$router.push({ name: 'home' })
               Notify.create({
                 message: 'Vous êtes désormais connecté',
@@ -127,6 +129,7 @@ export default {
                   }
                 ]
               })
+            }, 1000);
             // }).catch((err) => {
             //   this.loading = false
             //   Notify.create({

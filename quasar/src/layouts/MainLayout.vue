@@ -6,6 +6,19 @@
         <q-toolbar-title>
           Skip-Bo'nline
         </q-toolbar-title>
+
+        <q-btn-dropdown flat square class="account-dropdown">
+          <template #label>
+            <q-icon name="account_circles" class="d-block" />
+          </template>
+          <q-list>
+            <q-item clickable v-close-popup @click="logout">
+              <q-item-section>
+                <q-item-label>Se déconnecter</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </q-toolbar>
     </q-header>
 
@@ -16,7 +29,23 @@
 </template>
 
 <script>
+import { LocalStorage } from 'quasar'
+
 export default {
-  name: 'MainLayout'
+  name: 'MainLayout',
+  methods: {
+    logout() {
+      LocalStorage.remove('token')
+      this.$router.push({ name: 'signin' })
+    }
+  }
 }
 </script>
+
+<style lang="scss">
+.account-dropdown {
+  .q-btn-dropdown__arrow {
+    display: none;
+  }
+}
+</style>
