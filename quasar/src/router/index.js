@@ -1,7 +1,7 @@
 import { route } from 'quasar/wrappers'
 import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router'
 import routes from './routes'
-import { LocalStorage } from 'quasar'
+import { SessionStorage } from 'quasar'
 
 /*
  * If not building with SSR mode, you can
@@ -28,7 +28,7 @@ export default route(function (/* { store, ssrContext } */) {
   })
 
   Router.beforeEach(async (to, from, next) => {
-    const isAuthenticated = LocalStorage.has('token')
+    const isAuthenticated = SessionStorage.has('user')
     if (!isAuthenticated && to.name !== 'signin' && to.name !== 'signup') {
       return next({
         name: 'signin',

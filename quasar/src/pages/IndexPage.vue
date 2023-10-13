@@ -30,6 +30,8 @@
 </template>
 
 <script>
+import { api } from 'boot/axios'
+
 export default {
   name: 'IndexPage',
   data() {
@@ -37,6 +39,11 @@ export default {
       showJoinPopup: false,
       joinCode: ''
     }
+  },
+  created() {
+    api.get('/api/users/me').then((res) => {
+      console.log(res.data)
+    })
   },
   methods: {
     joinParty() {

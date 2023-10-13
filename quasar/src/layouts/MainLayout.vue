@@ -29,13 +29,13 @@
 </template>
 
 <script>
-import { LocalStorage } from 'quasar'
+import { SessionStorage } from 'quasar'
 
 export default {
   name: 'MainLayout',
   methods: {
     logout() {
-      LocalStorage.remove('token')
+      SessionStorage.remove('user')
       this.$router.push({ name: 'signin' })
     }
   }

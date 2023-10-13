@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('party_users', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string('party_id');

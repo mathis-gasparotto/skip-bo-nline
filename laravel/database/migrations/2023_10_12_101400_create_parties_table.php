@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('parties', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->uuid('id')->primary();
             $table->string('id', 8)->change();
             $table->string('stack1');

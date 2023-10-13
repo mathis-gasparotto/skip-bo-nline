@@ -1,5 +1,5 @@
 <template>
-  <q-container class="flex flex-center column page h-100">
+  <div class="flex flex-center column page h-100">
     <p class="text-h6 q-px-xl q-py-md bg-primary text-center text-bold title text-white">
       Connexion
     </p>
@@ -9,18 +9,15 @@
       @submit.prevent="onsubmit()"
     >
       <q-input
-        name="email"
+        name="username"
         rounded
         outlined
-        label="Adresse mail"
+        label="Username"
         autofocus
         class="q-mb-md login-input"
-        type="email"
-        v-model="form.email"
-        :rules="[
-          (val, rules) =>
-            rules.email(val) || 'Veullez rensigner une addresse email valide'
-        ]"
+        type="text"
+        v-model="form.username"
+        :rules="[(val) => val.trim().length > 0 || 'Veullez remplir ce champ']"
         lazy-rules
         hide-bottom-space
       ></q-input>
@@ -66,18 +63,19 @@
         </p>
       </q-card-section>
     </q-card>
-  </q-container>
+  </div>
 </template>
 
 <script>
-import { Notify, LocalStorage } from 'quasar'
+import { Notify, SessionStorage } from 'quasar'
+import { api } from 'boot/axios'
 
 export default {
   name: 'SigninPage',
   data() {
     return {
       form: {
-        email: '',
+        username: '',
         password: ''
       },
       showPassword: false,
@@ -88,7 +86,7 @@ export default {
   watch: {
     form: {
       handler() {
-        if (this.form.email && this.form.password) {
+        if (this.form.username && this.form.password) {
           this.$refs.loginForm.validate().then((success) => {
             if (success) {
               this.validate = true
@@ -112,40 +110,42 @@ export default {
           // this.form.email
           // this.form.password
 
-          // .then(() => {
-            setTimeout(() => {
-              LocalStorage.set('token', 'token')
-              this.$router.push({ name: 'home' })
-              Notify.create({
-                message: 'Vous êtes désormais connecté',
-                color: 'positive',
-                icon: 'check_circle',
-                position: 'top',
-                timeout: 3000,
-                actions: [
-                  {
-                    icon: 'close',
-                    color: 'white'
-                  }
-                ]
-              })
-            }, 1000);
-            // }).catch((err) => {
-            //   this.loading = false
-            //   Notify.create({
-            //     message: err,
-            //     color: 'negative',
-            //     icon: 'report_problem',
-            //     position: 'top',
-            //     timeout: 3000,
-            //     actions: [
-            //       {
-            //         icon: 'close',
-            //         color: 'white'
-            //       }
-            //     ]
-            //   })
-            // })
+          const payload = {
+            username: this.form.username.trim(),
+            password: this.form.password.trim()
+          }
+          api.post('/api/login', payload, {withCredentials: true}).then((response) => {
+            SessionStorage.set('user', response.data.user)
+            this.$router.push({ name: 'home' })
+            Notify.create({
+              message: 'Vous êtes désormais connecté',
+              color: 'positive',
+              icon: 'check_circle',
+              position: 'top',
+              timeout: 3000,
+              actions: [
+                {
+                  icon: 'close',
+                  color: 'white'
+                }
+              ]
+            })
+          }).catch((err) => {
+            this.loading = false
+            Notify.create({
+              message: err,
+              color: 'negative',
+              icon: 'report_problem',
+              position: 'top',
+              timeout: 3000,
+              actions: [
+                {
+                  icon: 'close',
+                  color: 'white'
+                }
+              ]
+            })
+          })
         } else {
           this.loading = false
         }

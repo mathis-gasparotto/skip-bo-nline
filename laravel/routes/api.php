@@ -22,7 +22,6 @@ Route::middleware('guest:sanctum')->post('/login', [SanctumAuthenticatedSessionC
 Route::middleware('guest:sanctum')->post('/register', [RegisteredUserController::class, 'store']);
 Route::prefix('users/me')->middleware('auth')->group(function () {
     Route::get('', function (Request $request) {
-        dd($request->user());
         return $request->user();
     });
     Route::post('', [ResetInfosUsers::class,'username']);
