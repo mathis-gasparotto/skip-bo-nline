@@ -1,5 +1,5 @@
 <template>
-  <q-container class="flex flex-center column page h-100">
+  <div class="flex flex-center column page h-100">
     <p class="text-h6 q-px-xl q-py-md bg-primary text-center text-bold title text-white">
       Inscription
     </p>
@@ -90,11 +90,12 @@
       Tu as déjà un compte ?
       <router-link :to="{ name: 'signin' }" class="text-underline text-bold">Connecte toi</router-link>
     </p>
-  </q-container>
+  </div>
 </template>
 
 <script>
-import { Notify, LocalStorage } from 'quasar'
+import { Notify, SessionStorage } from 'quasar'
+import { api } from 'boot/axios'
 
 export default {
   name: 'SignupPage',
@@ -143,41 +144,47 @@ export default {
           // this.form.password.trim()
           // this.form.username.trim()
           // this.form.email.trim()
-
-            // .then(() => {
-              LocalStorage.set('token', 'token')
-              this.$router.push({ name: 'home' })
-              Notify.create({
-                message: 'Vous avez bien été inscrit',
-                color: 'positive',
-                icon: 'check_circle',
-                position: 'top',
-                timeout: 3000,
-                actions: [
-                  {
-                    icon: 'close',
-                    color: 'white'
-                  }
-                ]
-              })
-            // })
-            // .catch((err) => {
-            //   this.loading = false
-            //   console.log(err)
-            //   Notify.create({
-            //     message: err,
-            //     color: 'negative',
-            //     icon: 'report_problem',
-            //     position: 'top',
-            //     timeout: 3000,
-            //     actions: [
-            //       {
-            //         icon: 'close',
-            //         color: 'white'
-            //       }
-            //     ]
-            //   })
-            // })
+          const payload = {
+            username: this.form.username.trim(),
+            email: this.form.email.trim(),
+            password: this.form.password.trim(),
+            password_confirmation: this.form.confirmPassword.trim()
+          }
+          api.post('/api/register', payload, {withCredentials: true}).then((response) => {
+            // return console.log(response)
+            SessionStorage.set('user', response.data.user)
+            this.$router.push({ name: 'home' })
+            Notify.create({
+              message: 'Vous avez bien été inscrit',
+              color: 'positive',
+              icon: 'check_circle',
+              position: 'top',
+              timeout: 3000,
+              actions: [
+                {
+                  icon: 'close',
+                  color: 'white'
+                }
+              ]
+            })
+          })
+          .catch((err) => {
+            this.loading = false
+            console.log(err)
+            Notify.create({
+              message: err,
+              color: 'negative',
+              icon: 'report_problem',
+              position: 'top',
+              timeout: 3000,
+              actions: [
+                {
+                  icon: 'close',
+                  color: 'white'
+                }
+              ]
+            })
+          })
         } else {
           this.loading = false
         }
