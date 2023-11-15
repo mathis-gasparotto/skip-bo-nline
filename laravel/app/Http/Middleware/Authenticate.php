@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class Authenticate extends Middleware
 {
@@ -17,5 +18,11 @@ class Authenticate extends Middleware
                 'api_status' => '401',
                 'message' => 'UnAuthenticated',
             ], 401));
+
+        // if (!Auth::check()) {
+        //     return redirect('/login');
+        // }
+
+        // return $next($request);
     }
 }

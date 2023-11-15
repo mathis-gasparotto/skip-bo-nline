@@ -43,14 +43,15 @@ class RegisteredUserController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
             ]);
+            $token = explode("|", $user->createToken('auth_token')->plainTextToken)[1];
             return response()->json([
-                'success' => true,
+                'token' => $token,
                 'user' =>  $user
             ], 200);
         }catch (Throwable $e){
             return response()->json([
                 'success' => false,
-                'error' => $e->getMessage()
+                'message' => $e->getMessage()
             ], 500);
         }
     }

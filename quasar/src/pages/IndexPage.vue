@@ -19,6 +19,7 @@
       </q-card>
     </q-dialog>
     <div class="flex column btns">
+        {{ user.username }}
       <q-btn @click="showJoinPopup = true">
         Rejoindre une partie
       </q-btn>
@@ -30,20 +31,19 @@
 </template>
 
 <script>
-import { api } from 'boot/axios'
+import { SessionStorage } from 'quasar'
 
 export default {
   name: 'IndexPage',
+  setup() {
+    const user = SessionStorage.getItem('user')
+    return { user }
+  },
   data() {
     return {
       showJoinPopup: false,
       joinCode: ''
     }
-  },
-  created() {
-    api.get('/api/users/me').then((res) => {
-      console.log(res.data)
-    })
   },
   methods: {
     joinParty() {

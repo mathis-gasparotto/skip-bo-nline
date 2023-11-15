@@ -139,19 +139,16 @@ export default {
   methods: {
     onsubmit() {
       this.loading = true
-      this.$refs.signupForm.validate().then((success) => {
+      this.$refs.signupForm.validate().then(async (success) => {
         if (success) {
-          // this.form.password.trim()
-          // this.form.username.trim()
-          // this.form.email.trim()
           const payload = {
             username: this.form.username.trim(),
             email: this.form.email.trim(),
             password: this.form.password.trim(),
             password_confirmation: this.form.confirmPassword.trim()
           }
-          api.post('/api/register', payload, {withCredentials: true}).then((response) => {
-            // return console.log(response)
+          api.post('/register', payload).then((response) => {
+            SessionStorage.set('token', response.data.token)
             SessionStorage.set('user', response.data.user)
             this.$router.push({ name: 'home' })
             Notify.create({
@@ -167,12 +164,10 @@ export default {
                 }
               ]
             })
-          })
-          .catch((err) => {
+          }).catch((err) => {
             this.loading = false
-            console.log(err)
             Notify.create({
-              message: err,
+              message: err.response.data.message,
               color: 'negative',
               icon: 'report_problem',
               position: 'top',

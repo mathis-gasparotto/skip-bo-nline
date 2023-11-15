@@ -105,16 +105,14 @@ export default {
   methods: {
     onsubmit() {
       this.loading = true
-      this.$refs.loginForm.validate().then((success) => {
+      this.$refs.loginForm.validate().then(async (success) => {
         if (success) {
-          // this.form.email
-          // this.form.password
-
           const payload = {
             username: this.form.username.trim(),
             password: this.form.password.trim()
           }
-          api.post('/api/login', payload, {withCredentials: true}).then((response) => {
+          api.post('/login', payload).then((response) => {
+            SessionStorage.set('token', response.data.token)
             SessionStorage.set('user', response.data.user)
             this.$router.push({ name: 'home' })
             Notify.create({
@@ -133,7 +131,7 @@ export default {
           }).catch((err) => {
             this.loading = false
             Notify.create({
-              message: err,
+              message: err.response.data.message,
               color: 'negative',
               icon: 'report_problem',
               position: 'top',
