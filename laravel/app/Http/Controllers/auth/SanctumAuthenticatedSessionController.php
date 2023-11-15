@@ -32,11 +32,9 @@ class SanctumAuthenticatedSessionController extends Controller
             ]);
             $request->authenticate();
 
-            $user = $request->user();
-
             return response()->json([
-                'success' => true,
-                'user' =>  $user,
+                'token' => explode("|", $request->user()->createToken('auth_token')->plainTextToken)[1],
+                'user' =>  $request->user(),
             ], 200);
         }catch (Throwable $e){
             return response()->json([

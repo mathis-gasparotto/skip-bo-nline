@@ -35,6 +35,7 @@ export default {
   name: 'MainLayout',
   methods: {
     logout() {
+      SessionStorage.remove('token')
       SessionStorage.remove('user')
       this.$router.push({ name: 'signin' })
     }

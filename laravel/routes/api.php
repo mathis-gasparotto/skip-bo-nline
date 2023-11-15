@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware('guest:sanctum')->post('/login', [SanctumAuthenticatedSessionController::class, 'store']);
 Route::middleware('guest:sanctum')->post('/register', [RegisteredUserController::class, 'store']);
-Route::prefix('users/me')->middleware('auth')->group(function () {
+Route::prefix('users/me')->middleware(['auth:sanctum'])->group(function () {
     Route::get('', function (Request $request) {
         return $request->user();
     });
