@@ -3,7 +3,7 @@
     <p class="text-h6 q-px-xl q-py-md bg-primary text-center text-bold title text-white">
       Inscription
     </p>
-    <q-form class="flex flex-center column form signup-form" ref="signupForm" @submit.prevent="onsubmit()">
+    <q-form class="flex flex-center column form signup-form q-mx-md" ref="signupForm" @submit.prevent="onsubmit()">
       <q-input
         name="username"
         rounded

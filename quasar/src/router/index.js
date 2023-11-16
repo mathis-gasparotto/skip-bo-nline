@@ -1,7 +1,8 @@
 import { route } from 'quasar/wrappers'
 import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router'
 import routes from './routes'
-import { SessionStorage } from 'quasar'
+import { SessionStorage, Notify } from 'quasar'
+import { api } from 'boot/axios'
 
 /*
  * If not building with SSR mode, you can
@@ -41,6 +42,28 @@ export default route(function (/* { store, ssrContext } */) {
         name:
           from.name === 'signin' || to.name === 'signup' ? 'home' : from.name,
       })
+    } else if (isAuthenticated && to.name === 'party') {
+      return api.post('/party/check', { partyId: to.params.uid }).then(() => {
+        return next()
+      }).catch((err) => {
+        Notify.create({
+          message: err.response.data.message,
+          color: 'negative',
+          icon: 'report_problem',
+          position: 'top',
+          timeout: 3000,
+          actions: [
+            {
+              icon: 'close',
+              color: 'white'
+            }
+          ]
+        })
+        return next({
+          name: from.name || 'home',
+        })
+      })
+
     } else {
       return next()
     }

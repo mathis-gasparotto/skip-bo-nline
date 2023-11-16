@@ -11,18 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('party_users', function (Blueprint $table) {
-            $table->engine = 'InnoDB';
-            $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->string('party_id');
-            $table->string('deck');
-            $table->string('hand');
-            $table->integer('card_draw_count');
-            $table->string('card_draw')->nullable();
-            $table->boolean('win')->nullable();
-            $table->timestamps();
-        });
+//        Schema::create('party_users', function (Blueprint $table) {
+//            $table->engine = 'InnoDB';
+//            $table->id();
+//            $table->unsignedBigInteger('user_id');
+//            $table->string('party_id');
+//            $table->string('deck');
+//            $table->string('hand');
+//            $table->integer('card_draw_count');
+//            $table->string('card_draw')->nullable();
+//            $table->boolean('win')->nullable();
+//            $table->timestamps();
+//        });
     }
 
     /**

@@ -26,7 +26,7 @@ const routes = [
         component: () => import('pages/IndexPage.vue')
       },
       {
-        path: 'party',
+        path: 'party/:uid',
         name: 'party',
         component: () => import("pages/PartiePage.vue")
       }
