@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Broadcast;
 |
 */
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+//Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
+//    return (int) $user->id === (int) $id;
+//});
+
+Broadcast::channel('party.{partyId}', function ($user, $partyId) {
+    $userCurrentParty = $user->currentParty;
+    return $userCurrentParty && $userCurrentParty->id === $partyId && !$userCurrentParty->finished;
 });

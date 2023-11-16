@@ -15,10 +15,10 @@ return new class extends Migration
             $table->engine = 'InnoDB';
             $table->uuid('id')->primary();
             $table->string('id', 8)->change();
-            $table->string('stack1');
-            $table->string('stack2');
-            $table->string('stack3');
-            $table->string('stack4');
+//            $table->string('stack1');
+//            $table->string('stack2');
+//            $table->string('stack3');
+//            $table->string('stack4');
             $table->boolean('finished')->default(false);
             $table->timestamps();
         });

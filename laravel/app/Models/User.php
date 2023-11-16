@@ -9,6 +9,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ *
+ */
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -23,7 +26,7 @@ class User extends Authenticatable
         'username',
         'email',
         'avatar',
-        'password',
+        'password'
     ];
 
     /**
@@ -46,8 +49,22 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
     public function parties()
     {
         return $this->belongsToMany(Party::class);
+    }
+
+    public function currentParty()
+    {
+        return $this->belongsTo(Party::class, 'current_party');
+    }
+
+    public function setCurrentParty(Party $party): void
+    {
+        $this->currentParty()->associate($party);
+        $this->save();
     }
 }

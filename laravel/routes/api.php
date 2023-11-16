@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\SanctumAuthenticatedSessionController;
+use App\Http\Controllers\PartyController;
 use App\Http\Controllers\ResetInfosUsers;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -27,4 +28,9 @@ Route::prefix('users/me')->middleware(['auth:sanctum'])->group(function () {
     Route::post('', [ResetInfosUsers::class,'username']);
     Route::post('reset-email', [ResetInfosUsers::class,'email']);
     Route::post('reset-password', [ResetInfosUsers::class,'password']);
+});
+
+Route::prefix('party')->middleware(['auth:sanctum'])->group(function () {
+    Route::post('check', [PartyController::class, 'check']);
+    Route::post('join', [PartyController::class, 'join']);
 });
