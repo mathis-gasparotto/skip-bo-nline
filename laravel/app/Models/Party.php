@@ -23,7 +23,8 @@ class Party extends Model
         'stack2',
         'stack3',
         'stack4',
-        'finished'
+        'finished',
+        'card_draw_count'
     ];
 
     /**
