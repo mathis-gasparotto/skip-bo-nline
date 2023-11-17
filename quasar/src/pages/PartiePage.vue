@@ -148,11 +148,12 @@
 </template>
 
 <script>
-import { uid, Notify } from 'quasar'
+import { uid } from 'quasar'
 import { useRoute } from 'vue-router'
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
 import { api } from 'boot/axios'
+import notify from 'src/services/notify'
 
 export default {
   name: 'PartiePage',
@@ -242,34 +243,10 @@ export default {
       this.quitLoading = true
       api.post('/party/quit', { partyId: this.route.params.uid }).then(() => {
         this.$router.push({ name: 'home' })
-        Notify.create({
-          message: 'Vous avez bien quitté la partie',
-          color: 'positive',
-          icon: 'check_circle',
-          position: 'top',
-          timeout: 3000,
-          actions: [
-            {
-              icon: 'close',
-              color: 'white'
-            }
-          ]
-        })
+        notify().showPositiveNotify('Vous avez bien quitté la partie')
       }).catch((err) => {
         this.quitLoading = false
-        Notify.create({
-          message: err.response.data.message,
-          color: 'negative',
-          icon: 'report_problem',
-          position: 'top',
-          timeout: 3000,
-          actions: [
-            {
-              icon: 'close',
-              color: 'white'
-            }
-          ]
-        })
+        translate().showErrorMessage(err.response.data.message)
       })
     },
     selectCardMainJoueur(card) {

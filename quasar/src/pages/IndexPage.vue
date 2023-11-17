@@ -37,8 +37,9 @@
 </template>
 
 <script>
-import { SessionStorage, Notify } from 'quasar'
+import { SessionStorage } from 'quasar'
 import { api } from 'boot/axios'
+import translate from 'src/services/translate'
 
 export default {
   name: 'IndexPage',
@@ -58,32 +59,26 @@ export default {
     joinParty() {
       this.joinLoading = true
 
-      api.post('/party/join', { partyId: this.joinCode })
+      api.post('/party/join', { code: this.joinCode })
         .then((res) => {
           this.$router.push({ name: 'party', params: { uid: res.data.partyId } })
         })
         .catch((err) => {
           this.joinLoading = false
-          Notify.create({
-            message: err.response.data.message,
-            color: 'negative',
-            icon: 'report_problem',
-            position: 'top',
-            timeout: 3000,
-            actions: [
-              {
-                icon: 'close',
-                color: 'white'
-              }
-            ]
-          })
+          translate().showErrorMessage(err.response.data.message)
         })
     },
     createParty() {
-      // api request to create party
-
       this.createLoading = true
-      // this.$router.push({ name: 'party', params: { uid: 'new' } })
+
+      api.get('/party/create')
+        .then((res) => {
+          this.$router.push({ name: 'party', params: { uid: res.data.partyId } })
+        })
+        .catch((err) => {
+          this.createLoading = false
+          translate().showErrorMessage(err.response.data.message)
+        })
     }
   }
 }

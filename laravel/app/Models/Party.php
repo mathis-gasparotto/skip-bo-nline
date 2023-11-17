@@ -18,6 +18,7 @@ class Party extends Model
      * @var string[]
      */
     protected $fillable =[
+        'join_code',
         'stack1',
         'stack2',
         'stack3',

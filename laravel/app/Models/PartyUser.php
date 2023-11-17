@@ -16,11 +16,11 @@ class PartyUser extends Model
      * @var string[]
      */
     protected $fillable =[
-        'stack1',
-        'stack2',
-        'stack3',
-        'stack4',
-        'finished'
+        'deck',
+        'hand',
+        'card_draw_count',
+        'card_draw',
+        'win'
     ];
 
     /**
