@@ -18,19 +18,26 @@ class Party extends Model
      * @var string[]
      */
     protected $fillable =[
-//        'stack1',
-//        'stack2',
-//        'stack3',
-//        'stack4',
+        'stack1',
+        'stack2',
+        'stack3',
+        'stack4',
         'finished'
     ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function users()
+    public function currentUsers()
     {
-//        return $this->belongsToMany(User::class);
         return $this->hasMany(User::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function partyUsers()
+    {
+        return $this->hasMany(PartyUser::class);
     }
 }

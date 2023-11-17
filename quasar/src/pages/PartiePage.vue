@@ -1,15 +1,29 @@
 <template>
   <q-page class="flex flex-center">
+    <q-dialog v-model="showQuitPartyModal">
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          Voulez-vous vraiment quitter la partie ?
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Annuler" color="primary" v-close-popup />
+          <q-btn flat label="Quitter" color="red" @click="quit()" :loading="quitLoading" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
     <div class="plateaux-autres-joueurs">
       <div
         class="plateau-autre-joueur"
         v-for="(player, index) in adversaires"
         :key="index"
       >
-        <img
-          class="avatar"
-          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQvJAJoyYLSV2Eq3j2v09H1gTXt9BvTawmIJ0HAHNe0baHwxACwJH3tVBs46Wy7je7Iaw&usqp=CAU"
+        <q-icon
+          name="account_circles"
+          class="avatar bg-white d-block"
           alt="avatar"
+          color="primary"
+          size="45px"
         />
         <p class="pseudo">{{ player.pseudo }}</p>
         <div class="defausse-autre-joueur">
@@ -102,10 +116,12 @@
           </div>
         </div>
         <div class="profil">
-          <img
-            class="avatar"
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQvJAJoyYLSV2Eq3j2v09H1gTXt9BvTawmIJ0HAHNe0baHwxACwJH3tVBs46Wy7je7Iaw&usqp=CAU"
+          <q-icon
+            name="account_circles"
+            class="avatar d-block"
             alt="avatar"
+            color="primary"
+            size="45px"
           />
           <p class="pseudo">{{ user.pseudo }}</p>
         </div>
@@ -126,6 +142,8 @@
         </div>
       </div>
     </div>
+    <q-btn class="party__quit-btn q-mt-md q-ml-lg fixed" color="red" icon="logout"
+      round size="15px" @click.prevent="showQuitPartyModal = true" />
   </q-page>
 </template>
 
@@ -153,6 +171,9 @@ export default {
     window.Echo.channel('party-' + route.params.uid)
       .listen('UserJoined', (e) => {
         console.log('User Joined!', e.user)
+      })
+      .listen('UserQuited', (e) => {
+        console.log('User Quited', e.user)
       })
 
     return {
@@ -211,10 +232,46 @@ export default {
         }
       },
       selectedCard: null,
-      countDefausseJoueur: true
+      countDefausseJoueur: true,
+      showQuitPartyModal: false,
+      quitLoading: false
     }
   },
   methods: {
+    quit() {
+      this.quitLoading = true
+      api.post('/party/quit', { partyId: this.route.params.uid }).then(() => {
+        this.$router.push({ name: 'home' })
+        Notify.create({
+          message: 'Vous avez bien quitté la partie',
+          color: 'positive',
+          icon: 'check_circle',
+          position: 'top',
+          timeout: 3000,
+          actions: [
+            {
+              icon: 'close',
+              color: 'white'
+            }
+          ]
+        })
+      }).catch((err) => {
+        this.quitLoading = false
+        Notify.create({
+          message: err.response.data.message,
+          color: 'negative',
+          icon: 'report_problem',
+          position: 'top',
+          timeout: 3000,
+          actions: [
+            {
+              icon: 'close',
+              color: 'white'
+            }
+          ]
+        })
+      })
+    },
     selectCardMainJoueur(card) {
       if (this.selectedCard && this.selectedCard === card) {
         this.selectedCard = null
@@ -278,6 +335,21 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.party {
+  &__quit {
+    &-btn {
+      bottom: 10px;
+      right: 10px;
+      border-radius: 50%;
+      color: #fff;
+
+      &::before {
+        box-shadow: none !important;
+      }
+    }
+  }
+}
+
 /**  Plateaux des autres joueurs  **/
 .plateaux-autres-joueurs {
   //background: yellow;
@@ -292,8 +364,8 @@ export default {
   background: rgb(169, 169, 187);
   height: 200px;
   width: 100px;
-  top: 100px;
   border: 1px solid #333;
+  position: relative;
 }
 .pioche-autre-joueur {
   //background: brown;

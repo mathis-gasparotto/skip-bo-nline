@@ -50,21 +50,37 @@ class User extends Authenticatable
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function parties()
     {
-        return $this->belongsToMany(Party::class);
+        return $this->hasMany(PartyUser::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function currentParty()
     {
         return $this->belongsTo(Party::class, 'current_party');
     }
 
+    /**
+     * @param Party $party
+     * @return void
+     */
     public function setCurrentParty(Party $party): void
     {
         $this->currentParty()->associate($party);
+        $this->save();
+    }
+
+    /**
+     * @return void
+     */
+    public function deleteCurrentParty(): void
+    {
+        $this->currentParty()->dissociate();
         $this->save();
     }
 }

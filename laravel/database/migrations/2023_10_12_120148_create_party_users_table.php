@@ -11,18 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-//        Schema::create('party_users', function (Blueprint $table) {
-//            $table->engine = 'InnoDB';
-//            $table->id();
-//            $table->unsignedBigInteger('user_id');
+        Schema::create('parties_users', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->foreignId('user_id')->references('id')->on('users');
+            $table->foreignUuid('party_id')->references('id')->on('parties');
+            $table->primary(['user_id', 'party_id']);
+//            $table->unsignedInteger('user_id');
 //            $table->string('party_id');
-//            $table->string('deck');
-//            $table->string('hand');
-//            $table->integer('card_draw_count');
-//            $table->string('card_draw')->nullable();
-//            $table->boolean('win')->nullable();
-//            $table->timestamps();
-//        });
+            $table->string('deck');
+            $table->string('hand');
+            $table->integer('card_draw_count');
+            $table->string('card_draw')->nullable();
+            $table->boolean('win')->nullable();
+            $table->timestamps();
+
+        });
     }
 
     /**
@@ -30,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('party_users');
+        Schema::dropIfExists('parties_users');
     }
 };
