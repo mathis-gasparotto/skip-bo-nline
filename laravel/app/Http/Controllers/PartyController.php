@@ -6,6 +6,7 @@ use App\Events\UserJoined;
 use App\Events\UserQuited;
 use App\Models\Party;
 use App\Models\PartyUser;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -28,11 +29,7 @@ class PartyController extends Controller
 
         $party = $this->checkIfPartyExistsAndNotFinished($request->input('code'), 'join_code');
         $user = $request->user();
-        $user->setCurrentParty($party);
-
-        UserJoined::dispatch($request->user(), $party->id);
-
-        return new JsonResponse(['message' => 'Joined party', 'partyId' => $party->id]);
+        return $this->joinParty($user, $party);
     }
 
     /**
@@ -98,36 +95,10 @@ class PartyController extends Controller
             'stack2' => json_encode(array()),
             'stack3' => json_encode(array()),
             'stack4' => json_encode(array()),
+            'card_draw_count' => $card_draw_count,
         ]);
 
-        $partyUser = (new PartyUser())
-            ->party()->associate($party)
-            ->user()->associate($user);
-
-        $userHand = [
-            $this->randomCard(),
-            $this->randomCard(),
-            $this->randomCard(),
-            $this->randomCard(),
-            $this->randomCard(),
-        ];
-        $userCardDraw = $this->randomCard();
-
-        $partyUser->hand = json_encode($userHand);
-        $partyUser->deck = json_encode(array());
-        $partyUser->card_draw_count = $card_draw_count;
-        $partyUser->card_draw = json_encode($userCardDraw);
-        $partyUser->save();
-
-        $user->setCurrentParty($party);
-
-        return new JsonResponse([
-            'partyId' => $party->id,
-            'hand' => $userHand,
-            'cardDrawCount' => $partyUser->card_draw_count,
-            'cardDraw' => $userCardDraw,
-            'joinCode' => $party->join_code,
-        ]);
+        return $this->joinParty($user, $party);
     }
 
     /**
@@ -177,6 +148,50 @@ class PartyController extends Controller
             'id' => (string) Str::uuid(),
             'value' => $randomCard,
         ];
+    }
+
+    /**
+     * @param User $user
+     * @param Party $party
+     * @return JsonResponse
+     */
+    private function joinParty(User $user, Party $party): JsonResponse
+    {
+        $partyUser = $party->partyUsers()->where('user_id', $user->id)->first();
+
+        if(!$partyUser) {
+            $partyUser = (new PartyUser());
+
+            $partyUser->party()->associate($party);
+            $partyUser->user()->associate($user);
+
+            $userHand = [
+                $this->randomCard(),
+                $this->randomCard(),
+                $this->randomCard(),
+                $this->randomCard(),
+                $this->randomCard(),
+            ];
+            $userCardDraw = $this->randomCard();
+
+            $partyUser->hand = json_encode($userHand);
+            $partyUser->deck = json_encode(array());
+            $partyUser->card_draw_count = $party->card_draw_count;
+            $partyUser->card_draw = json_encode($userCardDraw);
+            $partyUser->save();
+        }
+
+        $user->setCurrentParty($party);
+
+        UserJoined::dispatch($user, $party->id);
+
+        return new JsonResponse([
+            'partyId' => $party->id,
+            'hand' => json_decode($partyUser->hand),
+            'cardDrawCount' => $partyUser->card_draw_count,
+            'cardDraw' => json_decode($partyUser->card_draw),
+            'joinCode' => $party->join_code,
+        ]);
     }
 
     /**
