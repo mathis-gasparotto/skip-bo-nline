@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('parties_users', function (Blueprint $table) {
+        Schema::create('party_users', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->foreignId('user_id')->references('id')->on('users');
             $table->foreignUuid('party_id')->references('id')->on('parties');
@@ -22,7 +22,6 @@ return new class extends Migration
             $table->string('card_draw')->nullable();
             $table->boolean('win')->nullable();
             $table->timestamps();
-
         });
     }
 

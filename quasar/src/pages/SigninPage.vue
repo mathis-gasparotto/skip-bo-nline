@@ -67,8 +67,10 @@
 </template>
 
 <script>
-import { Notify, SessionStorage } from 'quasar'
+import { SessionStorage } from 'quasar'
 import { api } from 'boot/axios'
+import notify from 'src/services/notify'
+import translate from 'src/services/translate'
 
 export default {
   name: 'SigninPage',
@@ -115,34 +117,10 @@ export default {
             SessionStorage.set('token', response.data.token)
             SessionStorage.set('user', response.data.user)
             this.$router.push({ name: 'home' })
-            Notify.create({
-              message: 'Vous êtes désormais connecté',
-              color: 'positive',
-              icon: 'check_circle',
-              position: 'top',
-              timeout: 3000,
-              actions: [
-                {
-                  icon: 'close',
-                  color: 'white'
-                }
-              ]
-            })
+            notify().showPositiveNotify('Vous êtes désormais connecté')
           }).catch((err) => {
             this.loading = false
-            Notify.create({
-              message: err.response.data.message,
-              color: 'negative',
-              icon: 'report_problem',
-              position: 'top',
-              timeout: 3000,
-              actions: [
-                {
-                  icon: 'close',
-                  color: 'white'
-                }
-              ]
-            })
+            translate().showErrorMessage(err.response.data.message)
           })
         } else {
           this.loading = false

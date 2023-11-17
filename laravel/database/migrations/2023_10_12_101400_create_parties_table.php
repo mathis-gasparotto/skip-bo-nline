@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('parties', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->uuid('id')->primary();
-            $table->string('id', 8)->change();
             $table->string('stack1');
             $table->string('stack2');
             $table->string('stack3');

@@ -1,8 +1,9 @@
 import { route } from 'quasar/wrappers'
 import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router'
 import routes from './routes'
-import { SessionStorage, Notify } from 'quasar'
+import { SessionStorage } from 'quasar'
 import { api } from 'boot/axios'
+import translate from 'src/services/translate'
 
 /*
  * If not building with SSR mode, you can
@@ -46,19 +47,7 @@ export default route(function (/* { store, ssrContext } */) {
       return api.post('/party/check', { partyId: to.params.uid }).then(() => {
         return next()
       }).catch((err) => {
-        Notify.create({
-          message: err.response.data.message,
-          color: 'negative',
-          icon: 'report_problem',
-          position: 'top',
-          timeout: 3000,
-          actions: [
-            {
-              icon: 'close',
-              color: 'white'
-            }
-          ]
-        })
+        translate().showErrorMessage(err.response.data.message)
         return next({
           name: from.name || 'home',
         })
