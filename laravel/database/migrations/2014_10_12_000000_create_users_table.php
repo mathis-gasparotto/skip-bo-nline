@@ -15,10 +15,10 @@ return new class extends Migration
             $table->engine = 'InnoDB';
             $table->id();
             $table->string('username')->unique();
-            $table->string('avatar')->default('avatar_default.png');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('avatar')->default('avatar_default.png');
             $table->rememberToken();
             $table->timestamps();
         });
