@@ -35,4 +35,5 @@ Route::prefix('party')->middleware(['auth:sanctum'])->group(function () {
     Route::post('join', [PartyController::class, 'join']);
     Route::post('quit', [PartyController::class, 'quit']);
     Route::get('create', [PartyController::class, 'create']);
+    Route::get('/{uuid}', [PartyController::class, 'get']);
 });

@@ -52,7 +52,15 @@ export default route(function (/* { store, ssrContext } */) {
           name: from.name || 'home',
         })
       })
-
+    } else if (to.name === 'joinParty') {
+      return api.post('/party/join', { code: to.params.joinCode }).then((res) => {
+        return next({ name: 'party', params: { uid: res.data.partyId } })
+      }).catch((err) => {
+        translate().showErrorMessage(err.response.data.message)
+        return next({
+          name: from.name || 'home',
+        })
+      })
     } else {
       return next()
     }

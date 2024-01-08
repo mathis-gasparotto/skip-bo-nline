@@ -21,6 +21,20 @@ class PartyController extends Controller
      * @return JsonResponse
      * @throws \Exception
      */
+    public function get(Request $request): JsonResponse
+    {
+        $party = $this->getParty($request->route('uuid'));
+        return new JsonResponse([
+            'partyId' => $party->id,
+            'joinCode' => $party->join_code
+        ]);
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
     public function join(Request $request): JsonResponse
     {
         $this->checkRequest($request, [
@@ -124,10 +138,7 @@ class PartyController extends Controller
      */
     private function checkIfPartyExistsAndNotFinished(string $partyId, string $paramKey = 'id'): Party
     {
-        $party = match ($paramKey) {
-            'id' => Party::find($partyId),
-            'join_code' => Party::where('join_code', $partyId)->first(),
-        };
+        $party = $this->getParty($partyId, $paramKey);
         if (!$party) {
             throw new \Exception('Party not found', 404);
         }
@@ -135,6 +146,13 @@ class PartyController extends Controller
             throw new \Exception('Party is finished', 400);
         }
         return $party;
+    }
+
+    private function getParty (string $partyId, string $paramKey = 'id'): Party|null {
+        return match ($paramKey) {
+            'id' => Party::find($partyId),
+            'join_code' => Party::where('join_code', $partyId)->first(),
+        };
     }
 
     /**

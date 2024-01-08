@@ -26,6 +26,10 @@ const routes = [
         component: () => import('pages/IndexPage.vue')
       },
       {
+        path: 'party/join/:joinCode',
+        name: 'joinParty',
+      },
+      {
         path: 'party/:uid',
         name: 'party',
         component: () => import("pages/PartiePage.vue")

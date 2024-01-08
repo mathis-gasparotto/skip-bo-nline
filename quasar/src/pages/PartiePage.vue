@@ -142,8 +142,10 @@
         </div>
       </div>
     </div>
-    <q-btn class="party__quit-btn q-mt-md q-ml-lg fixed" color="red" icon="logout"
+    <q-btn class="party__quit-btn q-mt-md q-mr-lg fixed" color="red" icon="logout"
       round size="15px" @click.prevent="showQuitPartyModal = true" />
+    <q-btn class="party__share-btn q-mt-md q-ml-lg fixed" color="primary" icon="share"
+      round size="15px" @click.prevent="share()" />
   </q-page>
 </template>
 
@@ -154,6 +156,7 @@ import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
 import { api } from 'boot/axios'
 import notify from 'src/services/notify'
+import { Share } from '@capacitor/share'
 
 export default {
   name: 'PartiePage',
@@ -235,10 +238,24 @@ export default {
       selectedCard: null,
       countDefausseJoueur: true,
       showQuitPartyModal: false,
-      quitLoading: false
+      quitLoading: false,
+      party: null
     }
   },
+  created() {
+    api.get('/party/' + this.route.params.uid).then((res) => {
+      this.party = res.data
+    })
+  },
   methods: {
+    share() {
+      Share.share({
+        title: 'Inviter un ami',
+        text: 'Clique sur le lien ci-dessous, ou rend toi sur l\'application Skip-Bo\'nline et rentre le code d\'accès suivant : ' + this.party.joinCode,
+        url: `https://skip-bo.online/#/party/join/${this.party.joinCode}`,
+        dialogTitle: 'Inviter un ami'
+      })
+    },
     quit() {
       this.quitLoading = true
       api.post('/party/quit', { partyId: this.route.params.uid }).then(() => {
@@ -314,6 +331,18 @@ export default {
 <style lang="scss" scoped>
 .party {
   &__quit {
+    &-btn {
+      bottom: 10px;
+      left: 10px;
+      border-radius: 50%;
+      color: #fff;
+
+      &::before {
+        box-shadow: none !important;
+      }
+    }
+  }
+  &__share {
     &-btn {
       bottom: 10px;
       right: 10px;
