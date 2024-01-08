@@ -18,6 +18,22 @@ use Illuminate\Support\Facades\Broadcast;
 //});
 
 Broadcast::channel('party.{partyId}', function ($user, $partyId) {
-    $userCurrentParty = $user->currentParty;
-    return $userCurrentParty && $userCurrentParty->id === $partyId && !$userCurrentParty->finished;
+    if (!$user->isOnTheParty($partyId)) {
+        return false;
+    }
+    $partyService = new \App\Service\PartyService();
+    $party = $partyService->getParty($partyId);
+    return $party->status !== \App\Helper\PartyHelper::STATUS_FINISHED;
+});
+
+Broadcast::channel('party.{partyId}.started.{userId}', function ($user, $partyId, $userId) {
+    if ($user->id != $userId) {
+        return false;
+    }
+    if (!$user->isOnTheParty($partyId)) {
+        return false;
+    }
+    $partyService = new \App\Service\PartyService();
+    $party = $partyService->getParty($partyId);
+    return $party->status === \App\Helper\PartyHelper::STATUS_PENDING;
 });

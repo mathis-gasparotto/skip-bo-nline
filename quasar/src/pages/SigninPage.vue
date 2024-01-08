@@ -120,7 +120,8 @@ export default {
             notify().showPositiveNotify('Vous êtes désormais connecté')
           }).catch((err) => {
             this.loading = false
-            translate().showErrorMessage(err.response.data.message)
+            console.log()
+            translate().showErrorMessage(err.response ? err.response.data.message : err.message)
           })
         } else {
           this.loading = false

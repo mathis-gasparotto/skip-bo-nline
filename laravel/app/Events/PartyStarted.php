@@ -2,38 +2,24 @@
 
 namespace App\Events;
 
-use App\Models\User;
+use App\Helper\PartyHelper;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Queue\SerializesModels;
 
-/**
- *
- */
-class UserJoined implements ShouldBroadcast
+class PartyStarted implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * @var array
-     */
-    public array $user;
-
-    /**
      * Create a new event instance.
      */
-    public function __construct(User $user, public string $partyId, public string $partyJoinCode)
-    {
-        $this->user = [
-            'id' => $user->id,
-            'avatar' => $user->avatar,
-            'username' => $user->username,
-        ];
-    }
+    public function __construct(public string $partyJoinCode, public string|int $userId, public JsonResponse $partyInfos)
+    {}
 
     /**
      * Get the channels the event should broadcast on.
@@ -43,8 +29,7 @@ class UserJoined implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('party.' . $this->partyId),
-            new Channel('party.' . $this->partyJoinCode),
+            new PrivateChannel('party.' . $this->partyJoinCode . '.started.' . $this->userId),
         ];
     }
 }

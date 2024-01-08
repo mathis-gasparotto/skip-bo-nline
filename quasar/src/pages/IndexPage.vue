@@ -61,11 +61,11 @@ export default {
 
       api.post('/party/join', { code: this.joinCode })
         .then((res) => {
-          this.$router.push({ name: 'party', params: { uid: res.data.partyId } })
+          this.$router.push({ name: 'partyLobby', params: { joinCode: res.data.joinCode } })
         })
         .catch((err) => {
           this.joinLoading = false
-          translate().showErrorMessage(err.response.data.message)
+          translate().showErrorMessage(err.response ? err.response.data.message : err.message)
         })
     },
     createParty() {
@@ -73,11 +73,11 @@ export default {
 
       api.get('/party/create')
         .then((res) => {
-          this.$router.push({ name: 'party', params: { uid: res.data.partyId } })
+          this.$router.push({ name: 'partyLobby', params: { joinCode: res.data.joinCode } })
         })
         .catch((err) => {
           this.createLoading = false
-          translate().showErrorMessage(err.response.data.message)
+          translate().showErrorMessage(err.response ? err.response.data.message : err.message)
         })
     }
   }

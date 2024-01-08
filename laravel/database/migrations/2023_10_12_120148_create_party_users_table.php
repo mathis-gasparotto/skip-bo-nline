@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('party_users', function (Blueprint $table) {
             $table->engine = 'InnoDB';
+            $table->id();
             $table->foreignId('user_id')->references('id')->on('users');
             $table->foreignUuid('party_id')->references('id')->on('parties');
-            $table->primary(['user_id', 'party_id']);
+            $table->unique(['user_id', 'party_id']);
             $table->string('deck');
             $table->string('hand');
             $table->integer('card_draw_count');

@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-center">
-    <q-dialog v-model="showQuitPartyModal">
+    <q-dialog v-model="showLeavePartyModal">
       <q-card style="min-width: 350px">
         <q-card-section>
           Voulez-vous vraiment quitter la partie ?
@@ -8,7 +8,7 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Annuler" color="primary" v-close-popup />
-          <q-btn flat label="Quitter" color="red" @click="quit()" :loading="quitLoading" />
+          <q-btn flat label="Quitter" color="red" @click="leave()" :loading="leaveLoading" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -143,7 +143,7 @@
       </div>
     </div>
     <q-btn class="party__quit-btn q-mt-md q-mr-lg fixed" color="red" icon="logout"
-      round size="15px" @click.prevent="showQuitPartyModal = true" />
+      round size="15px" @click.prevent="showLeavePartyModal = true" />
     <q-btn class="party__share-btn q-mt-md q-ml-lg fixed" color="primary" icon="share"
       round size="15px" @click.prevent="share()" />
   </q-page>
@@ -157,6 +157,7 @@ import Pusher from 'pusher-js'
 import { api } from 'boot/axios'
 import notify from 'src/services/notify'
 import { Share } from '@capacitor/share'
+import translate from 'src/services/translate'
 
 export default {
   name: 'PartiePage',
@@ -172,12 +173,12 @@ export default {
       forceTLS: true
     })
 
-    window.Echo.channel('party-' + route.params.uid)
+    window.Echo.channel('party.' + route.params.uid)
       .listen('UserJoined', (e) => {
         console.log('User Joined!', e.user)
       })
-      .listen('UserQuited', (e) => {
-        console.log('User Quited', e.user)
+      .listen('UserLeaved', (e) => {
+        console.log('User Leaved', e.user)
       })
 
     return {
@@ -237,8 +238,8 @@ export default {
       },
       selectedCard: null,
       countDefausseJoueur: true,
-      showQuitPartyModal: false,
-      quitLoading: false,
+      showLeavePartyModal: false,
+      leaveLoading: false,
       party: null
     }
   },
@@ -256,14 +257,14 @@ export default {
         dialogTitle: 'Inviter un ami'
       })
     },
-    quit() {
-      this.quitLoading = true
-      api.post('/party/quit', { partyId: this.route.params.uid }).then(() => {
+    leave() {
+      this.leaveLoading = true
+      api.post('/party/leave', { data: this.route.params.uid, type: 'party_id' }).then(() => {
         this.$router.push({ name: 'home' })
         notify().showPositiveNotify('Vous avez bien quitté la partie')
       }).catch((err) => {
-        this.quitLoading = false
-        translate().showErrorMessage(err.response.data.message)
+        this.leaveLoading = false
+        translate().showErrorMessage(err.response ? err.response.data.message : err.message)
       })
     },
     selectCardMainJoueur(card) {

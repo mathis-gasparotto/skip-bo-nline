@@ -21,6 +21,12 @@ export default () => ({
         return 'Nom d\'utilisateur déjà utilisé'
       case 'The email has already been taken.':
         return 'Adresse email déjà utilisée'
+      case 'Party is full':
+        return 'La partie est pleine'
+      case 'Party has already started':
+        return 'La partie a déjà commencé'
+      case 'You\'re not the host of this party':
+        return 'Vous n\'êtes pas l\'hôte de cette partie'
       default:
         console.log(message)
         return 'Une erreur est survenue'

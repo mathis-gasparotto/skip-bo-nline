@@ -23,8 +23,9 @@ class Party extends Model
         'stack2',
         'stack3',
         'stack4',
-        'finished',
-        'card_draw_count'
+        'status',
+        'card_draw_count',
+        'author_id'
     ];
 
     /**
@@ -36,10 +37,26 @@ class Party extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function author()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function partyUsers()
     {
         return $this->hasMany(PartyUser::class);
+    }
+
+    /**
+     * @return int
+     */
+    public function getUserCount(): int
+    {
+        return $this->partyUsers()->count();
     }
 }

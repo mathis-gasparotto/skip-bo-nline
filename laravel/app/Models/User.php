@@ -83,4 +83,21 @@ class User extends Authenticatable
         $this->currentParty()->dissociate();
         $this->save();
     }
+
+    /**
+     * @param string $partyId
+     * @return bool
+     */
+    public function isOnTheParty(string $partyId): bool
+    {
+        return PartyUser::where('user_id', $this->id)->where('party_id', $partyId)->exists();
+    }
+
+//    /**
+//     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+//     */
+//    public function partiesCreated()
+//    {
+//        return $this->hasMany(Party::class);
+//    }
 }

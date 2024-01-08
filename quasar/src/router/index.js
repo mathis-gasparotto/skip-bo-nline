@@ -43,20 +43,29 @@ export default route(function (/* { store, ssrContext } */) {
         name:
           from.name === 'signin' || to.name === 'signup' ? 'home' : from.name,
       })
-    } else if (isAuthenticated && to.name === 'party') {
-      return api.post('/party/check', { partyId: to.params.uid }).then(() => {
+    } else if (isAuthenticated && to.name === 'party' && from.name !== 'partyLobby') {
+      return api.post('/party/check', { data: to.params.uid, type: 'party_id' }).then(() => {
         return next()
       }).catch((err) => {
-        translate().showErrorMessage(err.response.data.message)
+        translate().showErrorMessage(err.response ? err.response.data.message : err.message)
         return next({
           name: from.name || 'home',
         })
       })
-    } else if (to.name === 'joinParty') {
+    } else if (isAuthenticated && to.name === 'joinParty') {
       return api.post('/party/join', { code: to.params.joinCode }).then((res) => {
         return next({ name: 'party', params: { uid: res.data.partyId } })
       }).catch((err) => {
-        translate().showErrorMessage(err.response.data.message)
+        translate().showErrorMessage(err.response ? err.response.data.message : err.message)
+        return next({
+          name: from.name || 'home',
+        })
+      })
+    } else if (isAuthenticated && to.name === 'partyLobby' && from.name !== 'joinParty') {
+      return api.post('/party/check', { data: to.params.joinCode, type: 'join_code' }).then(() => {
+        return next()
+      }).catch((err) => {
+        translate().showErrorMessage(err.response ? err.response.data.message : err.message)
         return next({
           name: from.name || 'home',
         })

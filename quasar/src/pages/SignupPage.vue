@@ -156,7 +156,7 @@ export default {
             notify().showPositiveNotify('Vous avez bien été inscrit')
           }).catch((err) => {
             this.loading = false
-            translate().showErrorMessage(err.response.data.message)
+            translate().showErrorMessage(err.response ? err.response.data.message : err.message)
           })
         } else {
           this.loading = false
