@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Broadcast;
 //});
 
 Broadcast::channel('party.{partyId}', function ($user, $partyId) {
+//    return true;
     if (!$user->isOnTheParty($partyId)) {
         return false;
     }

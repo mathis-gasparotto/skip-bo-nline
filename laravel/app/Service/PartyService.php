@@ -32,8 +32,8 @@ class PartyService
         $partyUsers = $party->partyUsers()->get();
         foreach ($partyUsers as $partyUser) {
             $user = $partyUser->user;
-            $user->setCurrentParty($party);
-            $this->generateUserHand($user, $party);
+//            $user->setCurrentParty($party);
+//            $this->generateUserHand($user, $party);
             $partyInfos = new JsonResponse([
                 'hand' => json_decode($partyUser->hand),
                 'cardDrawCount' => $partyUser->card_draw_count,
@@ -41,8 +41,8 @@ class PartyService
             ]);
             PartyStarted::dispatch($party->join_code, $user->id, $partyInfos);
         }
-        $party->status = PartyHelper::STATUS_STARTED;
-        $party->save();
+//        $party->status = PartyHelper::STATUS_STARTED;
+//        $party->save();
     }
 
     /**
@@ -181,7 +181,7 @@ class PartyService
             $partyUser->hand = json_encode(array());
             $partyUser->deck = json_encode(array());
             $partyUser->card_draw_count = $party->card_draw_count;
-            $partyUser->card_draw = json_encode(array());
+            $partyUser->card_draw = null;
             $partyUser->save();
         }
 

@@ -54,7 +54,7 @@ export default route(function (/* { store, ssrContext } */) {
       })
     } else if (isAuthenticated && to.name === 'joinParty') {
       return api.post('/party/join', { code: to.params.joinCode }).then((res) => {
-        return next({ name: 'party', params: { uid: res.data.partyId } })
+        return next({ name: 'partyLobby', params: { uid: res.data.joinCode } })
       }).catch((err) => {
         translate().showErrorMessage(err.response ? err.response.data.message : err.message)
         return next({
