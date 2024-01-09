@@ -71,7 +71,7 @@ export default {
     createParty() {
       this.createLoading = true
 
-      api.get('/party/create')
+      api.post('/party/create')
         .then((res) => {
           this.$router.push({ name: 'partyLobby', params: { joinCode: res.data.joinCode } })
         })

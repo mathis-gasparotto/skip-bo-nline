@@ -18,7 +18,7 @@ class PartyStarted implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(public string $partyJoinCode, public string|int $userId, public JsonResponse $partyInfos)
+    public function __construct(public string $partyJoinCode, public string $userId, public JsonResponse $partyInfos)
     {}
 
     /**
@@ -29,7 +29,7 @@ class PartyStarted implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('party.' . $this->partyJoinCode . '.started.' . $this->userId),
+            new Channel('party.' . $this->partyJoinCode . '.started.' . $this->userId),
         ];
     }
 }

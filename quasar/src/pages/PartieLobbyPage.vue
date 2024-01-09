@@ -23,28 +23,17 @@
 </template>
 
 <script>
-import { uid, SessionStorage } from 'quasar'
+import { SessionStorage } from 'quasar'
 import { useRoute } from 'vue-router'
-import Echo from 'laravel-echo'
-import Pusher from 'pusher-js'
 import { api } from 'boot/axios'
 import notify from 'src/services/notify'
 import { Share } from '@capacitor/share'
 import translate from 'src/services/translate'
 
 export default {
-  name: 'PartiePage',
+  name: 'PartieLobbyPage',
   setup() {
     const route = useRoute()
-
-    window.Pusher = Pusher
-
-    window.Echo = new Echo({
-      broadcaster: 'pusher',
-      key: process.env.VUE_PUSHER_APP_KEY,
-      cluster: process.env.VUE_PUSHER_APP_CLUSTER,
-      forceTLS: true
-    })
 
     window.Echo.channel('party.' + route.params.joinCode)
       .listen('UserJoined', (e) => {
@@ -54,7 +43,7 @@ export default {
         console.log('User Leaved', e.user)
       })
 
-    window.Echo.private('party.' + route.params.joinCode + '.started.1')
+    window.Echo.channel('party.' + route.params.joinCode + '.started.' + SessionStorage.getItem('user').id)
       .listen('PartyStarted', (e) => {
         console.log('PartyStarted', e)
       })
@@ -87,64 +76,6 @@ export default {
         this.leaveLoading = false
         translate().showErrorMessage(err.response ? err.response.data.message : err.message)
       })
-    },
-    selectCardMainJoueur(card) {
-      if (this.selectedCard && this.selectedCard === card) {
-        this.selectedCard = null
-      } else {
-        this.selectedCard = card
-      }
-      console.log(this.selectedCard)
-    },
-    selectCardDefausseJoueur(index) {
-      if (this.selectedCard !== null && this.countDefausseJoueur == true) {
-        this.user.defausse[index].push(this.selectedCard.number)
-        // Retirer la carte de la main du joueur en la recherchant par son numéro
-        const indexCarteDansMain = this.user.main.findIndex(
-          (carte) => carte.number === this.selectedCard.number
-        )
-
-        if (indexCarteDansMain !== -1) {
-          this.user.main.splice(indexCarteDansMain, 1)
-        }
-
-        this.countDefausseJoueur = false
-        this.selectedCard = null
-      }
-    },
-    selectCardDefausseCentrale(pile, index) {
-      if (this.selectedCard !== null) {
-        // Récupérer la dernière carte de la pile sans la retirer
-        const derniereCarteDansPile = pile.slice(-1)[0]
-
-        // Vérifier si la carte sélectionnée est +1 par rapport à la carte actuelle
-        if (this.selectedCard.number === derniereCarteDansPile + 1) {
-          // Déplacer la carte vers la défausse centrale
-          this.plateauCentre.defausse[index].push(this.selectedCard.number)
-
-          // Retirer la carte de la main du joueur en la recherchant par son numéro
-          const indexCarteDansMain = this.user.main.findIndex(
-            (carteMain) => carteMain.number === this.selectedCard.number
-          )
-
-          if (indexCarteDansMain !== -1) {
-            this.user.main.splice(indexCarteDansMain, 1)
-          }
-
-          this.selectedCard = null
-        }
-      }
-    },
-    selectCardPiocheCentrale() {
-      if (this.user.main.length < 5) {
-        this.user.main.push(this.plateauCentre.pioche)
-      }
-    },
-    selectCardPiocheJoueur(carte) {},
-    game() {
-      //pioche
-      //joue
-      //dans sa defausse 1 seule
     }
   }
 }
