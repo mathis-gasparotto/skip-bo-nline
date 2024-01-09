@@ -90,9 +90,9 @@
         <div class="pioche-joueur">
           <div class="carte">
             <img
-              @click="selectCardPiocheJoueur(carte)"
+              @click="selectCardPiocheJoueur(user.pioche)"
               class="image-carte"
-              :src="`/assets/${user.pioche}.png`"
+              :src="`/assets/${user.pioche.number}.png`"
               :alt="`${user.pioche}`"
             />
           </div>
@@ -204,7 +204,10 @@ export default {
       user: {
         pseudo: 'jiei',
         defausse: [[6, 7, 3], [9, 8, 6], [], []],
-        pioche: 7,
+        pioche: {
+          number: 7,
+          uid: uid()
+        },
         taille_pioche: 3,
         main: [
           {
@@ -295,7 +298,7 @@ export default {
       if (this.selectedCard !== null) {
         // Récupérer la dernière carte de la pile sans la retirer
         const derniereCarteDansPile = pile.slice(-1)[0]
-
+        console.log(this.selectedCard)
         // Vérifier si la carte sélectionnée est +1 par rapport à la carte actuelle
         if (this.selectedCard.number === derniereCarteDansPile + 1) {
           // Déplacer la carte vers la défausse centrale
@@ -319,7 +322,10 @@ export default {
         this.user.main.push(this.plateauCentre.pioche)
       }
     },
-    selectCardPiocheJoueur(carte) {},
+    selectCardPiocheJoueur(carte) {
+        this.selectedCard = carte
+        console.log(carte)
+    },
     game() {
       //pioche
       //joue
