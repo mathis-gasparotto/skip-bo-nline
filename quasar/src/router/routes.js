@@ -32,12 +32,12 @@ const routes = [
       {
         path: 'party/:joinCode/lobby/',
         name: 'partyLobby',
-        component: () => import('pages/PartieLobbyPage.vue')
+        component: () => import('pages/PartyLobbyPage.vue')
       },
       {
         path: 'party/:uid',
         name: 'party',
-        component: () => import("pages/PartiePage.vue")
+        component: () => import("pages/PartyPage.vue")
       }
     ]
   },
