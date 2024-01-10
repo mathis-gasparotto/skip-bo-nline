@@ -93,6 +93,20 @@ class User extends Authenticatable
         return PartyUser::where('user_id', $this->id)->where('party_id', $partyId)->exists();
     }
 
+    /**
+     * @param string $partyId
+     * @return PartyUser
+     * @throws \Exception
+     */
+    public function getPartyUser(string $partyId): PartyUser
+    {
+        $partyUser = PartyUser::where('party_id', $partyId)->where('user_id', $this->id)->first();
+        if (!$partyUser) {
+            throw new \Exception('User not found in party', 404);
+        }
+        return $partyUser;
+    }
+
 //    /**
 //     * @return \Illuminate\Database\Eloquent\Relations\HasMany
 //     */

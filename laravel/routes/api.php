@@ -30,6 +30,7 @@ Route::prefix('users/me')->middleware(['auth:sanctum'])->group(function () {
     Route::post('reset-password', [ResetInfosUsers::class,'password']);
 });
 
+Route::middleware(['auth:sanctum'])->get('party_user/{uuid}', [PartyController::class, 'getPartyUser']);
 Route::prefix('party')->middleware(['auth:sanctum'])->group(function () {
     Route::post('check', [PartyController::class, 'check']);
     Route::post('join', [PartyController::class, 'join']);

@@ -24,16 +24,17 @@
 
 <script>
 import { SessionStorage } from 'quasar'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from 'boot/axios'
 import notify from 'src/services/notify'
 import { Share } from '@capacitor/share'
 import translate from 'src/services/translate'
 
 export default {
-  name: 'PartieLobbyPage',
+  name: 'PartyLobbyPage',
   setup() {
     const route = useRoute()
+    const router = useRouter()
 
     window.Echo.channel('party.' + route.params.joinCode)
       .listen('UserJoined', (e) => {
@@ -43,9 +44,9 @@ export default {
         console.log('User Leaved', e.user)
       })
 
-    window.Echo.channel('party.' + route.params.joinCode + '.started.' + SessionStorage.getItem('user').id)
+    window.Echo.channel('party.' + route.params.joinCode + '.started.' + SessionStorage.getItem('user')?.id)
       .listen('PartyStarted', (e) => {
-        console.log('PartyStarted', e)
+        router.push({ name: 'party', params: { uid: e.partyId } })
       })
 
     return {

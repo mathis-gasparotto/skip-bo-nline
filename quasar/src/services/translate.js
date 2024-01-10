@@ -25,6 +25,8 @@ export default () => ({
         return 'La partie est pleine'
       case 'Party has already started':
         return 'La partie a déjà commencé'
+      case 'Party is already finished':
+        return 'La partie est déjà terminée'
       case 'You\'re not the host of this party':
         return 'Vous n\'êtes pas l\'hôte de cette partie'
       default:
