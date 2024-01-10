@@ -29,6 +29,10 @@ export default () => ({
         return 'La partie est déjà terminée'
       case 'You\'re not the host of this party':
         return 'Vous n\'êtes pas l\'hôte de cette partie'
+      case 'Party already joined':
+        return 'Vous avez déjà rejoinds cette partie'
+      case 'Already on a party':
+        return 'Vous êtes déjà dans une partie'
       default:
         console.log(message)
         return 'Une erreur est survenue'
