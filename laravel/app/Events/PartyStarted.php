@@ -18,7 +18,11 @@ class PartyStarted implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(public string $partyJoinCode, public string $userId, public JsonResponse $partyInfos)
+    public function __construct(
+        public string $partyJoinCode,
+        public string|int $userId,
+        public string $partyId
+    )
     {}
 
     /**

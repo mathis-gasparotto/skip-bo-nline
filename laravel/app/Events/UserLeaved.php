@@ -26,7 +26,11 @@ class UserLeaved implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(User $user, public string $partyId, public string $partyJoinCode)
+    public function __construct(
+        User $user,
+        public string $partyId,
+        public string $partyJoinCode
+    )
     {
         $this->user = [
             'id' => $user->id,

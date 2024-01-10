@@ -1,5 +1,5 @@
 <template>
-  <q-page class="flex flex-center">
+  <q-page class="flex flex-center" v-if="!loading">
     <q-dialog v-model="showLeavePartyModal">
       <q-card style="min-width: 350px">
         <q-card-section>
@@ -15,7 +15,7 @@
     <div class="plateaux-autres-joueurs">
       <div
         class="plateau-autre-joueur"
-        v-for="(player, index) in adversaires"
+        v-for="(opponent, index) in party.opponents"
         :key="index"
       >
         <q-icon
@@ -25,61 +25,61 @@
           color="primary"
           size="45px"
         />
-        <p class="pseudo">{{ player.pseudo }}</p>
-        <div class="defausse-autre-joueur">
+        <p class="username">{{ opponent.username }}</p>
+        <div class="deck-autre-joueur">
           <div
-            class="carte"
-            v-for="(pile, index) in player.defausse"
+            class="card"
+            v-for="(pile, index) in opponent.deck"
             :key="index"
           >
             <img
-              v-for="(carte, index) in pile"
-              :key="index"
-              class="image-carte image-carte-defausse"
-              :src="`/assets/${carte}.png`"
-              :alt="`${carte}`"
+              v-for="card in pile"
+              :key="card.uid"
+              class="image-card image-card-deck"
+              :src="`/assets/${card.value}.png`"
+              :alt="`${card.value}`"
             />
           </div>
         </div>
-        <div class="pioche-autre-joueur">
-          <div class="carte">
+        <div class="cardDraw-autre-joueur">
+          <div class="card">
             <img
-              class="image-carte"
-              :src="`/assets/${player.pioche}.png`"
-              :alt="`${player.pioche}`"
+              class="image-card"
+              :src="`/assets/${opponent.cardDraw.value}.png`"
+              :alt="`${opponent.cardDraw.value}`"
             />
           </div>
           <div class="autre-joueurs-taillePioche">
-            {{ player.taille_pioche }}
+            {{ opponent.cardDrawCount }}
           </div>
         </div>
       </div>
     </div>
 
-    <div class="plateau-centre">
-      <div class="pioche-joueurs">
-        <div class="carte">
+    <div class="plateau-center">
+      <div class="cardDraw-joueurs">
+        <div class="card">
           <img
             @click="selectCardPiocheCentrale()"
-            class="image-carte"
+            class="image-card"
             src="/assets/skipbo.png"
-            alt="pioche"
+            alt="cardDraw"
           />
         </div>
       </div>
-      <div class="defausse-joueurs">
+      <div class="deck-joueurs">
         <div
           @click="selectCardDefausseCentrale(pile, index)"
-          class="carte"
-          v-for="(pile, index) in plateauCentre.defausse"
+          class="card"
+          v-for="(pile, index) in party.stack"
           :key="index"
         >
           <img
-            v-for="(carte, index) in pile"
-            :key="index"
-            class="image-carte image-carte-defausse-centre"
-            :src="`/assets/${carte}.png`"
-            :alt="`${carte}`"
+            v-for="card in pile"
+            :key="card.uid"
+            class="image-card image-card-deck-center"
+            :src="`/assets/${card.value}.png`"
+            :alt="`${card.value}`"
           />
         </div>
       </div>
@@ -87,31 +87,31 @@
 
     <div class="plateau-joueur">
       <div class="partie-sup">
-        <div class="pioche-joueur">
-          <div class="carte">
+        <div class="cardDraw-joueur">
+          <div class="card">
             <img
-              @click="selectCardPiocheJoueur(user.pioche)"
-              class="image-carte"
-              :src="`/assets/${user.pioche.number}.png`"
-              :alt="`${user.pioche}`"
+              @click="selectCardPiocheJoueur(user.cardDraw)"
+              class="image-card"
+              :src="`/assets/${user.cardDraw.value}.png`"
+              :alt="`${user.cardDraw}`"
             />
           </div>
-          <div class="joueur-taillePioche">{{ user.taille_pioche }}</div>
+          <div class="joueur-taillePioche">{{ user.cardDrawCount }}</div>
         </div>
-        <div class="defausse-joueur">
+        <div class="deck-joueur">
           <div
             @click="selectCardDefausseJoueur(index)"
-            class="carte"
-            v-for="(pile, index) in user.defausse"
+            class="card"
+            v-for="(pile, index) in user.deck"
             :key="index"
           >
-            <!--{{ carte }}-->
+            <!--{{ card }}-->
             <img
-              v-for="(carte, index) in pile"
-              :key="index"
-              class="image-carte image-carte-defausse"
-              :src="`/assets/${carte}.png`"
-              :alt="`${carte}`"
+              v-for="card in pile"
+              :key="card.uid"
+              class="image-card image-card-deck"
+              :src="`/assets/${card.value}.png`"
+              :alt="`${card.value}`"
             />
           </div>
         </div>
@@ -123,21 +123,21 @@
             color="primary"
             size="45px"
           />
-          <p class="pseudo">{{ user.pseudo }}</p>
+          <p class="username">{{ user.username }}</p>
         </div>
       </div>
-      <div class="cartes-main">
+      <div class="cards-hand">
         <div
-          class="carte"
-          v-for="carte in user.main"
-          :key="carte.uid"
-          :class="{ 'selected-card': selectedCard === carte }"
+          class="card"
+          v-for="card in user.hand"
+          :key="card.uid"
+          :class="{ 'selected-card': selectedCard === card }"
         >
           <img
-            @click="selectCardMainJoueur(carte)"
-            class="image-carte"
-            :src="`/assets/${carte.number}.png`"
-            :alt="`${carte.number}`"
+            @click="selectCardMainJoueur(card)"
+            class="image-card"
+            :src="`/assets/${card.value}.png`"
+            :alt="`${card.value}`"
           />
         </div>
       </div>
@@ -150,7 +150,7 @@
 </template>
 
 <script>
-import { uid } from 'quasar'
+import { SessionStorage, uid, Loading } from 'quasar'
 import { useRoute } from 'vue-router'
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
@@ -160,18 +160,9 @@ import { Share } from '@capacitor/share'
 import translate from 'src/services/translate'
 
 export default {
-  name: 'PartiePage',
+  name: 'PartyPage',
   setup() {
     const route = useRoute()
-
-    window.Pusher = Pusher
-
-    window.Echo = new Echo({
-      broadcaster: 'pusher',
-      key: process.env.VUE_PUSHER_APP_KEY,
-      cluster: process.env.VUE_PUSHER_APP_CLUSTER,
-      forceTLS: true
-    })
 
     window.Echo.channel('party.' + route.params.uid)
       .listen('UserJoined', (e) => {
@@ -187,57 +178,44 @@ export default {
   },
   data() {
     return {
-      adversaires: [
-        {
-          pseudo: 'njuh',
-          defausse: [[1, 2, 3], [4, 5, 6], [], []],
-          pioche: 4,
-          taille_pioche: 5
-        },
-        {
-          pseudo: 'klpi',
-          defausse: [[], [], [1, 2, 3], [4, 5, 6]],
-          pioche: 8,
-          taille_pioche: 10
-        }
+      loading: true,
+      opponents: [
+        // {
+        //   username: 'njuh',
+        //   deck: [[1, 2, 3], [4, 5, 6], [], []],
+        //   cardDraw: 4,
+        //   cardDrawCount: 5
+        // },
+        // {
+        //   username: 'klpi',
+        //   deck: [[], [], [1, 2, 3], [4, 5, 6]],
+        //   cardDraw: 8,
+        //   cardDrawCount: 10
+        // }
       ],
       user: {
-        pseudo: 'jiei',
-        defausse: [[6, 7, 3], [9, 8, 6], [], []],
-        pioche: {
-          number: 7,
-          uid: uid()
-        },
-        taille_pioche: 3,
-        main: [
-          {
-            number: 1,
-            uid: uid()
-          },
-          {
-            number: 5,
-            uid: uid()
-          },
-          {
-            number: 7,
-            uid: uid()
-          },
-          {
-            number: 9,
-            uid: uid()
-          },
-          {
-            number: 7,
-            uid: uid()
-          }
-        ]
+        username: '',
+        deck: [[], [], [], []],
+        cardDraw: {},
+        cardDrawCount: 5,
+        hand: []
       },
       plateauCentre: {
-        defausse: [[], [9, 8, 6], [4, 5, 9], []],
-        pioche: {
-          number: 5,
-          uid: uid()
-        }
+        deck: [
+          [],
+          [
+            { value: 9, uid },
+            { value: 8, uid },
+            { value: 6, uid }
+          ],
+          [
+            { value: 4, uid },
+            { value: 5, uid },
+            { value: 9, uid }
+          ],
+          []
+        ],
+        cardDraw: {}
       },
       selectedCard: null,
       countDefausseJoueur: true,
@@ -247,11 +225,36 @@ export default {
     }
   },
   created() {
-    api.get('/party/' + this.route.params.uid).then((res) => {
-      this.party = res.data
+    Loading.show()
+    Promise.all([
+      this.loadUser(),
+      this.loadPartyUser(),
+      this.loadParty(),
+    ]).then(() => {
+      Loading.hide()
+      this.loading = false
     })
   },
   methods: {
+    loadParty() {
+      return api.get('/party/' + this.route.params.uid).then((res) => {
+        this.party = res.data
+      })
+    },
+    loadPartyUser() {
+      return api.get('/party_user/' + this.route.params.uid).then((res) => {
+        this.user.deck = res.data.deck
+        this.user.hand = res.data.hand
+        this.user.cardDraw = res.data.cardDraw
+        this.user.cardDrawCount = res.data.cardDrawCount
+      })
+    },
+    loadUser() {
+      return api.get('/users/me').then((res) => {
+        SessionStorage.set('user', res.data)
+        this.user.username = res.data.username
+      })
+    },
     share() {
       Share.share({
         title: 'Inviter un ami',
@@ -280,14 +283,14 @@ export default {
     },
     selectCardDefausseJoueur(index) {
       if (this.selectedCard !== null && this.countDefausseJoueur == true) {
-        this.user.defausse[index].push(this.selectedCard.number)
-        // Retirer la carte de la main du joueur en la recherchant par son numéro
-        const indexCarteDansMain = this.user.main.findIndex(
-          (carte) => carte.number === this.selectedCard.number
+        this.user.deck[index].push(this.selectedCard.value)
+        // Retirer la card de la main du joueur en la recherchant par son numéro
+        const indexCarteDansMain = this.user.hand.findIndex(
+          (card) => card.value === this.selectedCard.value
         )
 
         if (indexCarteDansMain !== -1) {
-          this.user.main.splice(indexCarteDansMain, 1)
+          this.user.hand.splice(indexCarteDansMain, 1)
         }
 
         this.countDefausseJoueur = false
@@ -296,21 +299,21 @@ export default {
     },
     selectCardDefausseCentrale(pile, index) {
       if (this.selectedCard !== null) {
-        // Récupérer la dernière carte de la pile sans la retirer
+        // Récupérer la dernière card de la pile sans la retirer
         const derniereCarteDansPile = pile.slice(-1)[0]
         console.log(this.selectedCard)
-        // Vérifier si la carte sélectionnée est +1 par rapport à la carte actuelle
-        if (this.selectedCard.number === derniereCarteDansPile + 1) {
-          // Déplacer la carte vers la défausse centrale
-          this.plateauCentre.defausse[index].push(this.selectedCard.number)
+        // Vérifier si la card sélectionnée est +1 par rapport à la card actuelle
+        if (this.selectedCard.value === derniereCarteDansPile.value + 1) {
+          // Déplacer la card vers la défausse centrale
+          this.plateauCentre.deck[index].push(this.selectedCard.value)
 
-          // Retirer la carte de la main du joueur en la recherchant par son numéro
-          const indexCarteDansMain = this.user.main.findIndex(
-            (carteMain) => carteMain.number === this.selectedCard.number
+          // Retirer la card de la main du joueur en la recherchant par son numéro
+          const indexCarteDansMain = this.user.hand.findIndex(
+            (cardMain) => cardMain.value === this.selectedCard.value
           )
 
           if (indexCarteDansMain !== -1) {
-            this.user.main.splice(indexCarteDansMain, 1)
+            this.user.hand.splice(indexCarteDansMain, 1)
           }
 
           this.selectedCard = null
@@ -318,18 +321,18 @@ export default {
       }
     },
     selectCardPiocheCentrale() {
-      if (this.user.main.length < 5) {
-        this.user.main.push(this.plateauCentre.pioche)
+      if (this.user.hand.length < 5) {
+        this.user.hand.push(this.plateauCentre.cardDraw)
       }
     },
-    selectCardPiocheJoueur(carte) {
-        this.selectedCard = carte
-        console.log(carte)
+    selectCardPiocheJoueur(card) {
+        this.selectedCard = card
+        console.log(card)
     },
     game() {
-      //pioche
+      //cardDraw
       //joue
-      //dans sa defausse 1 seule
+      //dans sa deck 1 seule
     }
   }
 }
@@ -380,13 +383,13 @@ export default {
   border: 1px solid #333;
   position: relative;
 }
-.pioche-autre-joueur {
+.cardDraw-autre-joueur {
   //background: brown;
   height: 70px;
   width: 50px;
 }
 
-.defausse-autre-joueur {
+.deck-autre-joueur {
   //background: brown;
   height: 70px;
   width: 100%;
@@ -394,7 +397,7 @@ export default {
   display: flex;
   justify-content: space-evenly;
 }
-.pseudo {
+.username {
   margin: 15px 0 5px;
   text-align: center;
 }
@@ -416,7 +419,7 @@ export default {
   position: fixed;
   bottom: 30px;
 }
-.pioche-joueur {
+.cardDraw-joueur {
   //background: brown;
   height: 100px;
   width: 70px;
@@ -425,7 +428,7 @@ export default {
   position: absolute;
   top: 85px;
 }
-.defausse-joueur {
+.deck-joueur {
   background: rgb(169, 169, 187);
   height: 120px;
   width: 200px;
@@ -442,14 +445,14 @@ export default {
   justify-content: space-evenly;
   margin-bottom: 15px;
 }
-.cartes-main {
+.cards-hand {
   //background: purple;
   height: 100px;
   width: 100%;
   display: flex;
   justify-content: center;
 }
-.profil .pseudo {
+.profil .username {
   text-align: center;
   margin-top: 40px;
 }
@@ -470,21 +473,21 @@ export default {
   align-items: center;
 }
 
-/**  Plateau de la pioche et de la défausse commune  **/
-.plateau-centre {
+/**  Plateau de la cardDraw et de la défausse commune  **/
+.plateau-center {
   //background: rgb(169, 169, 187);
   height: 100px;
   width: 100%;
   display: flex;
   justify-content: space-evenly;
 }
-.pioche-joueurs {
+.cardDraw-joueurs {
   //background: brown;
   height: 100px;
   width: 70px;
 }
 
-.defausse-joueurs {
+.deck-joueurs {
   //background: brown;
   height: 100px;
   width: 200px;
@@ -494,60 +497,60 @@ export default {
 }
 
 /**  Carte  **/
-.carte {
+.card {
   border: 1px solid #333;
   width: 20px;
   height: 35px;
   margin-top: 5px;
   border-radius: 10%;
 }
-.defausse-joueurs .carte,
-.defausse-joueur .carte {
+.deck-joueurs .card,
+.deck-joueur .card {
   width: 30px;
   height: 50px;
 }
-.cartes-main .carte,
-.pioche-autre-joueur .carte,
-.pioche-joueur .carte,
-.pioche-joueurs .carte {
+.cards-hand .card,
+.cardDraw-autre-joueur .card,
+.cardDraw-joueur .card,
+.cardDraw-joueurs .card {
   width: 40px;
   height: 60px;
 }
-.pioche-autre-joueur,
-.pioche-joueur,
-.pioche-joueurs {
+.cardDraw-autre-joueur,
+.cardDraw-joueur,
+.cardDraw-joueurs {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.image-carte {
+.image-card {
   width: 38px;
   height: 58px;
   border-radius: 10%;
 }
-.defausse-joueur .carte .image-carte {
+.deck-joueur .card .image-card {
   width: 28px;
   height: 48px;
 }
-.image-carte-defausse-centre {
+.image-card-deck-center {
   position: absolute;
 }
-.image-carte-defausse:not(:first-child) {
+.image-card-deck:not(:first-child) {
   margin-top: -100px;
 }
-.defausse-autre-joueur .carte .image-carte {
+.deck-autre-joueur .card .image-card {
   width: 20px;
   height: 35px;
 }
 
-.pioche-autre-joueur .carte .image-carte,
-.pioche-autre-joueur .carte {
+.cardDraw-autre-joueur .card .image-card,
+.cardDraw-autre-joueur .card {
   width: 30px;
   height: 45px;
 }
 
-.carte.selected-card {
+.card.selected-card {
   border: 2px solid yellow;
 }
 </style>

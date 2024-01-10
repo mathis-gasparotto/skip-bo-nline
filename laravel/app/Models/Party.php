@@ -19,13 +19,11 @@ class Party extends Model
      */
     protected $fillable =[
         'join_code',
-        'stack1',
-        'stack2',
-        'stack3',
-        'stack4',
+        'stack',
         'status',
         'card_draw_count',
-        'author_id'
+        'author_id',
+        'status',
     ];
 
     /**
