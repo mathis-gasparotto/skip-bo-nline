@@ -88,9 +88,9 @@
     <div class="plateau-joueur">
       <div class="partie-sup">
         <div class="cardDraw-joueur">
-          <div class="card">
+          <div class="card" :class="{ 'selected-card': selectedCard === user.cardDraw }">
             <img
-              @click="selectCardPiocheJoueur(user.cardDraw)"
+              @click="selectCard(user.cardDraw)"
               class="image-card"
               :src="`/assets/${user.cardDraw.value}.png`"
               :alt="`${user.cardDraw}`"
@@ -100,8 +100,8 @@
         </div>
         <div class="deck-joueur">
           <div
-            @click="selectCardDefausseJoueur(index)"
-            class="card"
+            @click="dropInDeck(index)"
+            class="card column no-wrap"
             v-for="(pile, index) in user.deck"
             :key="index"
           >
@@ -134,7 +134,7 @@
           :class="{ 'selected-card': selectedCard === card }"
         >
           <img
-            @click="selectCardMainJoueur(card)"
+            @click="selectCard(card)"
             class="image-card"
             :src="`/assets/${card.value}.png`"
             :alt="`${card.value}`"
@@ -218,7 +218,6 @@ export default {
         cardDraw: {}
       },
       selectedCard: null,
-      countDefausseJoueur: true,
       showLeavePartyModal: false,
       leaveLoading: false,
       party: null
@@ -273,7 +272,7 @@ export default {
         translate().showErrorMessage(err.response ? err.response.data.message : err.message)
       })
     },
-    selectCardMainJoueur(card) {
+    selectCard(card) {
       if (this.selectedCard && this.selectedCard === card) {
         this.selectedCard = null
       } else {
@@ -281,10 +280,12 @@ export default {
       }
       console.log(this.selectedCard)
     },
-    selectCardDefausseJoueur(index) {
-      if (this.selectedCard !== null && this.countDefausseJoueur == true) {
-        this.user.deck[index].push(this.selectedCard.value)
-        // Retirer la card de la main du joueur en la recherchant par son numéro
+    dropInDeck(index) {
+      if (this.selectedCard) {
+        this.user.deck[index].push(this.selectedCard)
+
+        // delete card from hand
+
         const indexCarteDansMain = this.user.hand.findIndex(
           (card) => card.value === this.selectedCard.value
         )
@@ -293,7 +294,6 @@ export default {
           this.user.hand.splice(indexCarteDansMain, 1)
         }
 
-        this.countDefausseJoueur = false
         this.selectedCard = null
       }
     },
@@ -324,10 +324,6 @@ export default {
       if (this.user.hand.length < 5) {
         this.user.hand.push(this.plateauCentre.cardDraw)
       }
-    },
-    selectCardPiocheJoueur(card) {
-        this.selectedCard = card
-        console.log(card)
     },
     game() {
       //cardDraw
@@ -418,11 +414,13 @@ export default {
   width: 100%;
   position: fixed;
   bottom: 30px;
+  padding-top: 5px;
 }
 .cardDraw-joueur {
   //background: brown;
   height: 100px;
   width: 70px;
+  padding-top: 5px;
 }
 .joueur-taillePioche {
   position: absolute;
@@ -435,6 +433,7 @@ export default {
   display: flex;
   justify-content: space-evenly;
   border: 1px solid #333;
+  padding-top: 5px;
 }
 
 .partie-sup {
@@ -451,6 +450,7 @@ export default {
   width: 100%;
   display: flex;
   justify-content: center;
+  padding-top: 5px;
 }
 .profil .username {
   text-align: center;
@@ -501,7 +501,6 @@ export default {
   border: 1px solid #333;
   width: 20px;
   height: 35px;
-  margin-top: 5px;
   border-radius: 10%;
 }
 .deck-joueurs .card,
@@ -537,7 +536,7 @@ export default {
   position: absolute;
 }
 .image-card-deck:not(:first-child) {
-  margin-top: -100px;
+  margin-top: -31px;
 }
 .deck-autre-joueur .card .image-card {
   width: 20px;
@@ -550,7 +549,24 @@ export default {
   height: 45px;
 }
 
-.card.selected-card {
-  border: 2px solid yellow;
+.cardDraw-joueur,
+.cards-hand {
+  .card {
+    &.selected-card {
+      animation: selectedCard infinite 1.2s ease-in-out;
+    }
+  }
+}
+
+@keyframes selectedCard {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 </style>

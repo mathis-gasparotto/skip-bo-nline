@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Events\PartyStarted;
 use App\Events\UserJoined;
 use App\Events\UserLeaved;
+use App\Helper\GlobalHelper;
 use App\Helper\PartyHelper;
 use App\Models\Party;
 use App\Models\PartyUser;
@@ -124,11 +125,12 @@ class PartyService
 
     /**
      * @param string $partyId
+     * @param User $user
      * @param string $paramKey
      * @return Party
      * @throws \Exception
      */
-    public function checkForJoinParty(string $partyId, string $paramKey = PartyHelper::CODE_TYPE_PARTY_ID): Party
+    public function checkForJoinParty(string $partyId, User $user, string $paramKey = PartyHelper::CODE_TYPE_PARTY_ID): Party
     {
         $party = $this->getParty($partyId, $paramKey);
         if ($party->status == PartyHelper::STATUS_STARTED) {
@@ -136,6 +138,12 @@ class PartyService
         }
         if ($party->status == PartyHelper::STATUS_FINISHED) {
             throw new \Exception('Party is finished', 400);
+        }
+        if ($user->currentParty == $party) {
+            throw new \Exception('Party already joined', 400);
+        }
+        if ($user->currentParty) {
+            throw new \Exception('Already on a party', 400);
         }
         if ($party->getUserCount() >= 4) {
             throw new \Exception('Party is full', 400);
@@ -159,19 +167,6 @@ class PartyService
             throw new \Exception('Party not found', 404);
         }
         return $party;
-    }
-
-    /**
-     * @return array
-     */
-    private function randomCard(): array
-    {
-        $cards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-        $randomCard = $cards[array_rand($cards)];
-        return [
-            'uid' => (string) Str::uuid(),
-            'value' => $randomCard,
-        ];
     }
 
     /**
@@ -213,16 +208,15 @@ class PartyService
         }
 
         $userHand = [
-            $this->randomCard(),
-            $this->randomCard(),
-            $this->randomCard(),
-            $this->randomCard(),
-            $this->randomCard(),
+            GlobalHelper::randomCard(),
+            GlobalHelper::randomCard(),
+            GlobalHelper::randomCard(),
+            GlobalHelper::randomCard(),
+            GlobalHelper::randomCard(),
         ];
-        $userCardDraw = $this->randomCard();
 
         $partyUser->hand = json_encode($userHand);
-        $partyUser->card_draw = json_encode($userCardDraw);
+        $partyUser->card_draw = json_encode(GlobalHelper::randomCard());
         $partyUser->save();
     }
 

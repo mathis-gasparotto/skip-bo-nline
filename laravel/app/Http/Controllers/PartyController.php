@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helper\GlobalHelper;
 use App\Helper\PartyHelper;
 use App\Models\PartyUser;
 use App\Service\PartyService;
@@ -84,7 +85,7 @@ class PartyController extends Controller
             'code' => 'required|string',
         ]);
 
-        $party = $this->partyService->checkForJoinParty($request->input('code'), 'join_code');
+        $party = $this->partyService->checkForJoinParty($request->input('code'), $request->user(), 'join_code');
         $this->partyService->joinParty($request->user(), $party);
 
         return new JsonResponse([
@@ -176,5 +177,15 @@ class PartyController extends Controller
 //                'deck' => json_decode($partyUser->deck),
 //            ])
         ]);
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function drawCard(Request $request): JsonResponse
+    {
+        return new JsonResponse(GlobalHelper::randomCard());
     }
 }
