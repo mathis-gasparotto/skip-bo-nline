@@ -43,6 +43,14 @@ class Party extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function userToPlay()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function partyUsers()

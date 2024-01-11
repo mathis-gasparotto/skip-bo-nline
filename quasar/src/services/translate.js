@@ -33,6 +33,8 @@ export default () => ({
         return 'Vous avez déjà rejoinds cette partie'
       case 'Already on a party':
         return 'Vous êtes déjà dans une partie'
+      case 'Card not found':
+        return 'Carte introuvable'
       default:
         console.log(message)
         return 'Une erreur est survenue'

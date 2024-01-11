@@ -36,7 +36,9 @@ Route::prefix('party')->middleware(['auth:sanctum'])->group(function () {
     Route::post('join', [PartyController::class, 'join']);
     Route::post('start', [PartyController::class, 'start']);
     Route::post('leave', [PartyController::class, 'leave']);
-    Route::post('draw_card', [PartyController::class, 'drawCard']);
+    Route::post('move', [PartyController::class, 'move']);
+    Route::post('draw/player', [PartyController::class, 'drawPlayerCard']);
+    Route::post('draw', [PartyController::class, 'drawCard']);
     Route::post('create', [PartyController::class, 'create']);
     Route::get('/join-code/{code}', [PartyController::class, 'get']);
     Route::get('/{uuid}', [PartyController::class, 'get']);
