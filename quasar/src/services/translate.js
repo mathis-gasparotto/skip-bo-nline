@@ -35,6 +35,8 @@ export default () => ({
         return 'Vous êtes déjà dans une partie'
       case 'Card not found':
         return 'Carte introuvable'
+      case 'Not enough players':
+        return 'Pas assez de joueurs'
       default:
         console.log(message)
         return 'Une erreur est survenue'
