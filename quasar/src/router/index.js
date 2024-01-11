@@ -4,6 +4,7 @@ import routes from './routes'
 import { SessionStorage } from 'quasar'
 import { api } from 'boot/axios'
 import translate from 'src/services/translate'
+import PartyHelper from 'src/helpers/PartyHelper'
 
 /*
  * If not building with SSR mode, you can
@@ -44,7 +45,7 @@ export default route(function (/* { store, ssrContext } */) {
           from.name === 'signin' || to.name === 'signup' ? 'home' : from.name,
       })
     } else if (isAuthenticated && to.name === 'party' && from.name !== 'partyLobby') {
-      return api.post('/party/check', { data: to.params.uid, type: 'party_id' }).then(() => {
+      return api.post('/party/check', { data: to.params.uid, type: PartyHelper.CODE_TYPE_PARTY_ID }).then(() => {
         return next()
       }).catch((err) => {
         translate().showErrorMessage(err.response ? err.response.data.message : err.message)
@@ -62,7 +63,7 @@ export default route(function (/* { store, ssrContext } */) {
         })
       })
     } else if (isAuthenticated && to.name === 'partyLobby' && from.name !== 'joinParty') {
-      return api.post('/party/check', { data: to.params.joinCode, type: 'join_code' }).then(() => {
+      return api.post('/party/check', { data: to.params.joinCode, type: PartyHelper.CODE_TYPE_JOIN_CODE }).then(() => {
         return next()
       }).catch((err) => {
         translate().showErrorMessage(err.response ? err.response.data.message : err.message)

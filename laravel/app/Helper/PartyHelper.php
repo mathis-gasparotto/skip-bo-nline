@@ -47,10 +47,14 @@ final class PartyHelper
     /** @var string  */
     public const MOVE_TYPE_PARTY_STACK = 'party_stack';
 
+    /** @var string  */
+    public const MOVE_TYPE_PLAYER_CARD_DRAW = 'player_card_draw';
+
     /** @var string[]  */
     public const MOVE_TYPES = [
         self::MOVE_TYPE_HAND,
         self::MOVE_TYPE_DECK,
-        self::MOVE_TYPE_PARTY_STACK
+        self::MOVE_TYPE_PARTY_STACK,
+        self::MOVE_TYPE_PLAYER_CARD_DRAW,
     ];
 }

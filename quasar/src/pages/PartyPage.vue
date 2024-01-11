@@ -59,8 +59,13 @@
     <div class="plateau-center">
       <div class="cardDraw-joueurs">
         <div class="card">
-          <img
+          <!-- <img
             @click="selectCardPiocheCentrale()"
+            class="image-card"
+            src="/assets/skipbo.png"
+            alt="cardDraw"
+          /> -->
+          <img
             class="image-card"
             src="/assets/skipbo.png"
             alt="cardDraw"
@@ -100,7 +105,7 @@
         </div>
         <div class="deck-joueur">
           <div
-            @click="clickOnStackInDeck(stack)"
+            @click="clickOnStackInDeck(index)"
             class="card column no-wrap"
             v-for="(stack, index) in user.deck"
             :key="index"
@@ -156,6 +161,7 @@ import { api } from 'boot/axios'
 import notify from 'src/services/notify'
 import { Share } from '@capacitor/share'
 import translate from 'src/services/translate'
+import PartyHelper from 'src/helpers/PartyHelper'
 
 export default {
   name: 'PartyPage',
@@ -173,7 +179,13 @@ export default {
         console.log('User Draw', e)
       })
       .listen('UserMove', (e) => {
-        console.log('UserMove', e)
+        const user = this.components.find((user) => user.id === e.userId)
+        if (user) {
+          user.cardDraw = e.newCardDraw
+          user.cardDrawCount = e.newCardDrawCount
+          user.deck = e.userDeck
+          this.party.stack = e.partyStack
+        }
       })
 
     return {
@@ -185,16 +197,21 @@ export default {
       loading: true,
       opponents: [
         // {
-        //   username: 'njuh',
-        //   deck: [[1, 2, 3], [4, 5, 6], [], []],
-        //   cardDraw: 4,
-        //   cardDrawCount: 5
-        // },
-        // {
-        //   username: 'klpi',
-        //   deck: [[], [], [1, 2, 3], [4, 5, 6]],
-        //   cardDraw: 8,
-        //   cardDrawCount: 10
+        //   id: 2,
+        //   username: 'maggioo',
+        //   avatar: 'avatar_default.png',
+        //   cardDrawCount: 5,
+        //   cardDraw: {
+        //       uid: '16e7cf86-1803-4bf5-8b0f-9c5797713905',
+        //       value: 7
+        //   },
+        //   deck: [
+        //       [],
+        //       [],
+        //       [],
+        //       [],
+        //       []
+        //   ]
         // }
       ],
       user: {
@@ -270,7 +287,7 @@ export default {
     },
     leave() {
       this.leaveLoading = true
-      api.post('/party/leave', { data: this.route.params.uid, type: 'party_id' }).then(() => {
+      api.post('/party/leave', { data: this.route.params.uid, type: PartyHelper.CODE_TYPE_PARTY_ID }).then(() => {
         this.$router.push({ name: 'home' })
         notify().showPositiveNotify('Vous avez bien quitté la partie')
       }).catch((err) => {
@@ -279,6 +296,9 @@ export default {
       })
     },
     selectCard(card) {
+      if (!this.myTurn) {
+        return
+      }
       if (this.selectedCard && this.selectedCard === card) {
         this.selectedCard = null
       } else {
@@ -286,27 +306,25 @@ export default {
       }
       console.log(this.selectedCard)
     },
-    clickOnStackInDeck(stack) {
-      if (this.selectedCard && this.myTurn) {
-        // delete card from hand
-        if (this.user.cardDraw.uid === this.selectedCard.uid) {
-          // draw new card
-          api.post('/party/draw/player', { partyId: this.party.id }).then((res) => {
-            if (res.data.cardDraw || (!res.data.cardDraw && res.data.cardDrawCount <= 0)) {
-              this.user.cardDraw = res.data.cardDraw
-              this.user.cardDrawCount = res.data.cardDrawCount
-            }
-          })
-        } else {
-          this.user.hand = this.user.hand.filter((card) => card.uid !== this.selectedCard.uid)
-        }
+    clickOnStackInDeck(stackIndex) {
+      if (!this.selectedCard || !this.myTurn || this.user.cardDraw.uid == this.selectedCard.uid) {
+        return
+      }
 
-        // add card to stack
-        stack.push(this.selectedCard)
-
+      api.post('/party/move', {
+        partyId: this.party.partyId,
+        from: PartyHelper.MOVE_TYPE_HAND,
+        to: PartyHelper.MOVE_TYPE_DECK,
+        cardUid: this.selectedCard.uid,
+        toStackIndex: stackIndex
+      }).then((res) => {
+        this.user.deck = res.data.deck
+        this.user.hand = res.data.hand
         this.selectedCard = null
         this.myTurn = false
-      }
+      }).catch((err) => {
+        translate().showErrorMessage(err.response ? err.response.data.message : err.message)
+      })
     },
     selectCardDefausseCentrale(pile, index) {
       if (this.selectedCard !== null) {
