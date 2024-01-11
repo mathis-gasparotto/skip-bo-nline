@@ -29,6 +29,7 @@ import { api } from 'boot/axios'
 import notify from 'src/services/notify'
 import { Share } from '@capacitor/share'
 import translate from 'src/services/translate'
+import PartyHelper from 'src/helpers/PartyHelper'
 
 export default {
   name: 'PartyLobbyPage',
@@ -70,7 +71,7 @@ export default {
     },
     leave() {
       this.leaveLoading = true
-      api.post('/party/leave', { data: this.route.params.joinCode, type: 'join_code' }).then(() => {
+      api.post('/party/leave', { data: this.route.params.joinCode, type: PartyHelper.CODE_TYPE_JOIN_CODE }).then(() => {
         this.$router.push({ name: 'home' })
         notify().showPositiveNotify('Vous avez bien quitté la partie')
       }).catch((err) => {

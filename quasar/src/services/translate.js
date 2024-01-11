@@ -37,6 +37,8 @@ export default () => ({
         return 'Carte introuvable'
       case 'Not enough players':
         return 'Pas assez de joueurs'
+      case 'You cannot draw another card':
+        return 'Vous ne pouvez pas tirer une autre carte'
       default:
         console.log(message)
         return 'Une erreur est survenue'

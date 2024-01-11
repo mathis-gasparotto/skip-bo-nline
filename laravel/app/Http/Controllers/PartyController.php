@@ -68,6 +68,15 @@ class PartyController extends Controller
             ]);
             $toReturn['stack'] = json_decode($party->stack);
         }
+        if ($party->status === PartyHelper::STATUS_PENDING && $request->user()->isOnTheParty($party->id)) {
+            $toReturn['players'] = $party->partyUsers()->orderBy('created_at')->get()->map(fn (PartyUser $partyUser) => [
+                'id' => $partyUser->user->id,
+                'username' => $partyUser->user->username,
+                'avatar' => $partyUser->user->avatar,
+                'isMe' => $partyUser->user_id === $request->user()->id,
+            ]);
+            $toReturn['stack'] = json_decode($party->stack);
+        }
 
         return new JsonResponse($toReturn);
     }
@@ -196,35 +205,6 @@ class PartyController extends Controller
 //                'hand' => json_decode($partyUser->hand),
 //                'deck' => json_decode($partyUser->deck),
 //            ])
-        ]);
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     * @throws \Exception
-     */
-    public function drawCard(Request $request): JsonResponse
-    {
-        return new JsonResponse(GlobalHelper::randomCard());
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     * @throws \Exception
-     */
-    public function drawPlayerCard(Request $request): JsonResponse
-    {
-        $this->partyService->checkRequest($request, [
-            'partyId' => 'required|string'
-        ]);
-
-        [$cardDraw, $cardDrawCount] = $this->partyService->drawPlayerCard($request->user(), $request->input('partyId'));
-
-        return new JsonResponse([
-            'cardDraw' => $cardDraw,
-            'cardDrawCount' => $cardDrawCount,
         ]);
     }
 
