@@ -34,6 +34,7 @@ class UserMove implements ShouldBroadcast
         public array $partyStack,
         public array $newCardDraw,
         public int $newCardDrawCount,
+        public int $userToPlayId,
     )
     {
         $this->user = [
