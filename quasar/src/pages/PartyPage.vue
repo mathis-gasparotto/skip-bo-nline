@@ -152,8 +152,6 @@
 <script>
 import { SessionStorage, uid, Loading } from 'quasar'
 import { useRoute } from 'vue-router'
-import Echo from 'laravel-echo'
-import Pusher from 'pusher-js'
 import { api } from 'boot/axios'
 import notify from 'src/services/notify'
 import { Share } from '@capacitor/share'
@@ -245,6 +243,7 @@ export default {
     loadParty() {
       return api.get('/party/' + this.route.params.uid).then((res) => {
         this.party = res.data
+        this.myTurn = res.data.myTurn
       })
     },
     loadPartyUser() {
@@ -288,7 +287,7 @@ export default {
       console.log(this.selectedCard)
     },
     clickOnStackInDeck(stack) {
-      if (this.selectedCard) {
+      if (this.selectedCard && this.myTurn) {
         // delete card from hand
         if (this.user.cardDraw.uid === this.selectedCard.uid) {
           // draw new card
@@ -306,6 +305,7 @@ export default {
         stack.push(this.selectedCard)
 
         this.selectedCard = null
+        this.myTurn = false
       }
     },
     selectCardDefausseCentrale(pile, index) {
