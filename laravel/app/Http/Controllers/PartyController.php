@@ -46,18 +46,8 @@ class PartyController extends Controller
             $toReturn['myTurn'] = $party->userToPlay->id === $request->user()->id;
             $toReturn['userToPlayId'] = $party->userToPlay->id;
 
-
-            $opponents = $party->partyUsers()->orderBy('created_at')->get();
-
-            $indexToRemove = $opponents->search(fn (PartyUser $partyUser) => $partyUser->user_id === $request->user()->id);
-
-            $beforeMe = $opponents->reject(fn ($value, int $index) => $index === $indexToRemove);
-
-            $afterMe = $beforeMe->splice($indexToRemove);
-            $opponentsToReturn = $afterMe->merge($beforeMe);
-
-
-            $toReturn['opponents'] = $opponentsToReturn->map(fn (PartyUser $partyUser) => [
+            $opponents = $this->partyService->getOpponents($request->user(), $party);
+            $toReturn['opponents'] = $opponents->map(fn (PartyUser $partyUser) => [
                 'id' => $partyUser->user->id,
                 'username' => $partyUser->user->username,
                 'avatar' => $partyUser->user->avatar,

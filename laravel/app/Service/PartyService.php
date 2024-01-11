@@ -284,18 +284,23 @@ class PartyService
         if ($user->currentParty != $party) {
             throw new \Exception('You are not on this party', 403);
         }
+        if ($party->status != PartyHelper::STATUS_STARTED) {
+            throw new \Exception('Party has not started yet', 400);
+        }
+        if ($party->userToPlay->id != $user->id) {
+            throw new \Exception('It\'s not your turn', 400);
+        }
 
-        if ($from === PartyHelper::MOVE_TYPE_HAND && $to === PartyHelper::MOVE_TYPE_DECK && $toStackIndex) {
-            $this->nextUser($user, $party);
+        if ($from === PartyHelper::MOVE_TYPE_HAND && $to === PartyHelper::MOVE_TYPE_DECK && $toStackIndex !== null) {
             return $this->moveHandToDeck($user, $partyUser, $cardUid, $toStackIndex);
 
-        } elseif ($from === PartyHelper::MOVE_TYPE_HAND && $to === PartyHelper::MOVE_TYPE_PARTY_STACK && $toStackIndex) {
+        } elseif ($from === PartyHelper::MOVE_TYPE_HAND && $to === PartyHelper::MOVE_TYPE_PARTY_STACK && $toStackIndex !== null) {
             return $this->moveHandToPartyStack($user, $partyUser, $cardUid, $toStackIndex);
 
-        } elseif ($from === PartyHelper::MOVE_TYPE_DECK && $to === PartyHelper::MOVE_TYPE_PARTY_STACK && $fromStackIndex && $toStackIndex) {
+        } elseif ($from === PartyHelper::MOVE_TYPE_DECK && $to === PartyHelper::MOVE_TYPE_PARTY_STACK && $fromStackIndex !== null && $toStackIndex !== null) {
             return $this->moveDeckToPartyStack($user, $partyUser, $cardUid, $fromStackIndex, $toStackIndex);
 
-        } elseif ($from === PartyHelper::MOVE_TYPE_PLAYER_CARD_DRAW && $to === PartyHelper::MOVE_TYPE_PARTY_STACK && $toStackIndex) {
+        } elseif ($from === PartyHelper::MOVE_TYPE_PLAYER_CARD_DRAW && $to === PartyHelper::MOVE_TYPE_PARTY_STACK && $toStackIndex !== null) {
             return $this->movePlayerDrawToPartyStack($user, $partyUser, $cardUid, $toStackIndex);
 
         } else {
@@ -315,59 +320,37 @@ class PartyService
     {
         $hand = json_decode($partyUser->hand);
         $deck = json_decode($partyUser->deck);
-
-        $card = array_filter($hand, fn ($card) => $card->uid == $cardUid)[0];
-        if (!$card) {
+        $card = array_values(array_filter($hand, fn ($card) => $card->uid == $cardUid));
+        if (!isset($card[0])) {
             throw new \Exception('Card not found', 404);
+        } else {
+            $card = $card[0];
         }
 
-        $hand = array_filter($hand, fn ($card) => $card->uid != $cardUid);
+        $hand = array_values(array_filter($hand, fn ($card) => $card->uid != $cardUid));
         $deck[$stackIndex][] = $card;
 
         $partyUser->hand = json_encode($hand);
         $partyUser->deck = json_encode($deck);
         $partyUser->save();
 
-        UserMove::dispatch($user->id, $partyUser->id, $cardUid, $deck, json_decode($partyUser->party->stack), json_decode($partyUser->card_draw), $partyUser->card_draw_count);
+        $nextPlayer = $this->nextUser($user, $partyUser->party);
+
+        UserMove::dispatch(
+            $user->id,
+            $partyUser->party->id,
+            $cardUid, $deck,
+            json_decode($partyUser->party->stack, true),
+            json_decode($partyUser->card_draw, true),
+            $partyUser->card_draw_count,
+            $nextPlayer->id
+        );
 
         return [
             'hand' => $hand,
             'deck' => $deck
         ];
     }
-
-//    /**
-//     * @param User $user
-//     * @param PartyUser $partyUser
-//     * @param string $cardUid
-//     * @param int $stackIndex
-//     * @return array
-//     * @throws \Exception
-//     */
-//    private function moveDeckToHand(User $user, PartyUser $partyUser, string $cardUid, int $stackIndex): array
-//    {
-//        $deck = json_decode($partyUser->deck);
-//        $hand = json_decode($partyUser->hand);
-//
-//        $card = array_filter($deck[$stackIndex], fn ($card) => $card->uid == $cardUid)[0];
-//        if (!$card) {
-//            throw new \Exception('Card not found', 404);
-//        }
-//
-//        $deck[$stackIndex] = array_filter($deck[$stackIndex], fn ($card) => $card->uid != $cardUid);
-//        $hand[] = $card;
-//
-//        $partyUser->deck = json_encode($deck);
-//        $partyUser->hand = json_encode($hand);
-//        $partyUser->save();
-//
-//        UserMove::dispatch($user->id, $partyUser->id, $cardUid, $deck, json_decode($partyUser->party->stack), json_decode($partyUser->card_draw), $partyUser->card_draw_count);
-//
-//        return [
-//            'deck' => $deck,
-//            'hand' => $hand
-//        ];
-//    }
 
     /**
      * @param User $user
@@ -379,16 +362,18 @@ class PartyService
      */
     private function moveHandToPartyStack(User $user, PartyUser $partyUser, string $cardUid, int $stackIndex): array
     {
-        $hand = json_decode($partyUser->hand);
+        $hand = json_decode($partyUser->hand, true);
         $party = $partyUser->party;
-        $partyStack = json_decode($party->stack);
+        $partyStack = json_decode($party->stack, true);
 
-        $card = array_filter($hand, fn ($card) => $card->uid == $cardUid)[0];
-        if (!$card) {
+        $card = array_values(array_filter($hand, fn ($card) => $card->uid == $cardUid));
+        if (!isset($card[0])) {
             throw new \Exception('Card not found', 404);
+        } else {
+            $card = $card[0];
         }
 
-        $hand = array_filter($hand, fn ($card) => $card->uid != $cardUid);
+        $hand = array_values(array_filter($hand, fn ($card) => $card->uid != $cardUid));
         $partyStack[$stackIndex][] = $card;
 
         $partyUser->hand = json_encode($hand);
@@ -396,7 +381,16 @@ class PartyService
         $partyUser->save();
         $party->save();
 
-        UserMove::dispatch($user->id, $partyUser->id, $cardUid, json_decode($partyUser->deck), $partyStack, json_decode($partyUser->card_draw), $partyUser->card_draw_count);
+        UserMove::dispatch(
+            $user->id,
+            $partyUser->party->id,
+            $cardUid,
+            json_decode($partyUser->deck, true),
+            $partyStack,
+            json_decode($partyUser->card_draw, true),
+            $partyUser->card_draw_count,
+            $party->userToPlay->id
+        );
 
         return [
             'hand' => $hand,
@@ -415,16 +409,18 @@ class PartyService
      */
     private function moveDeckToPartyStack(User $user, PartyUser $partyUser, string $cardUid, int $fromStackIndex, int $toStackIndex): array
     {
-        $deck = json_decode($partyUser->deck);
+        $deck = json_decode($partyUser->deck, true);
         $party = $partyUser->party;
-        $partyStack = json_decode($party->stack);
+        $partyStack = json_decode($party->stack, true);
 
-        $card = array_filter($deck[$fromStackIndex], fn ($card) => $card->uid == $cardUid)[0];
-        if (!$card) {
+        $card = array_values(array_filter($deck[$fromStackIndex], fn ($card) => $card->uid == $cardUid));
+        if (!isset($card[0])) {
             throw new \Exception('Card not found', 404);
+        } else {
+            $card = $card[0];
         }
 
-        $deck[$fromStackIndex] = array_filter($deck[$fromStackIndex], fn ($card) => $card->uid != $cardUid);
+        $deck[$fromStackIndex] = array_values(array_filter($deck[$fromStackIndex], fn ($card) => $card->uid != $cardUid));
         $partyStack[$toStackIndex][] = $card;
 
         $partyUser->deck = json_encode($deck);
@@ -432,7 +428,16 @@ class PartyService
         $partyUser->save();
         $party->save();
 
-        UserMove::dispatch($user->id, $partyUser->id, $cardUid, $deck, $partyStack, json_decode($partyUser->card_draw), $partyUser->card_draw_count);
+        UserMove::dispatch(
+            $user->id,
+            $partyUser->party->id,
+            $cardUid,
+            $deck,
+            $partyStack,
+            json_decode($partyUser->card_draw, true),
+            $partyUser->card_draw_count,
+            $party->userToPlay->id
+        );
 
         return [
             'deck' => $deck,
@@ -450,22 +455,30 @@ class PartyService
      */
     private function movePlayerDrawToPartyStack(User $user, PartyUser $partyUser, string $cardUid, int $toStackIndex): array
     {
-        $playerCardDraw = json_decode($partyUser->card_draw);
+        $playerCardDraw = json_decode($partyUser->card_draw, true);
         if (!$playerCardDraw) {
             throw new \Exception('Card not found', 404);
         }
 
         $party = $partyUser->party;
-        $partyStack = json_decode($party->stack);
+        $partyStack = json_decode($party->stack, true);
         [$newCardDraw, $newCardDrawCount] = $this->pickPlayerCard($partyUser);
 
-//        $deck[$fromStackIndex] = array_filter($deck[$fromStackIndex], fn ($card) => $card->uid != $cardUid);
         $partyStack[$toStackIndex][] = $newCardDraw;
 
         $party->stack = json_encode($partyStack);
         $party->save();
 
-        UserMove::dispatch($user->id, $partyUser->id, $cardUid, json_decode($partyUser->deck), $partyStack, $newCardDraw, $newCardDrawCount);
+        UserMove::dispatch(
+            $user->id,
+            $partyUser->party->id,
+            $cardUid,
+            json_decode($partyUser->deck, true),
+            $partyStack,
+            $newCardDraw,
+            $newCardDrawCount,
+            $party->userToPlay->id
+        );
 
         return [
             'newCardDraw' => $newCardDraw,
@@ -474,21 +487,35 @@ class PartyService
         ];
     }
 
-    private function nextUser(User $user, Party $party): void
+    /**
+     * @param User $user
+     * @param Party $party
+     * @return User
+     */
+    private function nextUser(User $user, Party $party): User
     {
-        $indexUser = $party->partyUsers()->where('user_id', $user->id)->first()->index;
+        $nextPlayer = $this->getOpponents($user, $party)->first()->user;
 
-        dd($indexUser);
-
-        $indexUser = $indexUser + 1;
-
-        if ($indexUser > 3) {
-            $indexUser = 0;
-        }
-
-        $user = $party->partyUsers()->where('index', $indexUser)->first()->user;
-
-        $party->userToPlay()->associate($user);
+        $party->userToPlay()->associate($nextPlayer);
         $party->save();
+
+        return $nextPlayer;
+    }
+
+    /**
+     * @param User $user
+     * @param Party $party
+     * @return Collection
+     */
+    public function getOpponents(User $user, Party $party): Collection
+    {
+        $opponents = $party->partyUsers()->orderBy('created_at')->get();
+
+        $indexToRemove = $opponents->search(fn (PartyUser $partyUser) => $partyUser->user_id === $user->id);
+
+        $beforeMe = $opponents->reject(fn ($value, int $index) => $index === $indexToRemove);
+
+        $afterMe = $beforeMe->splice($indexToRemove);
+        return $afterMe->merge($beforeMe);
     }
 }

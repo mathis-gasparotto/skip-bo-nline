@@ -24,6 +24,12 @@
         </q-form>
       </q-card>
     </q-dialog>
+    <q-banner class="bg-primary text-white" v-if="user.current_party">
+      Vous avez une partie en cours
+      <template v-slot:action>
+        <q-btn flat color="white" label="Rejoindre" @click="$router.push({name: 'party', params: { uid: user.current_party }})" />
+      </template>
+    </q-banner>
     <div class="flex column btns">
         {{ user.username }}
       <q-btn @click="showJoinPopup = true">
@@ -55,7 +61,20 @@ export default {
       createLoading: false
     }
   },
+  created() {
+    this.reloadUser()
+  },
   methods: {
+    reloadUser() {
+      api.get('/users/me')
+        .then((res) => {
+          SessionStorage.set('user', res.data)
+          this.user = res.data
+        })
+        .catch((err) => {
+          translate().showErrorMessage(err.response ? err.response.data.message : err.message)
+        })
+    },
     joinParty() {
       this.joinLoading = true
 

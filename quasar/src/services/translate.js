@@ -39,6 +39,10 @@ export default () => ({
         return 'Pas assez de joueurs'
       case 'You cannot draw another card':
         return 'Vous ne pouvez pas tirer une autre carte'
+      case 'Party has not started yet':
+        return 'La partie n\'a pas encore commencé'
+      case 'It\'s not your turn':
+        return 'Ce n\'est pas votre tour'
       default:
         console.log(message)
         return 'Une erreur est survenue'

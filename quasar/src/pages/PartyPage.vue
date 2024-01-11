@@ -3,7 +3,7 @@
     <q-dialog v-model="showLeavePartyModal">
       <q-card style="min-width: 350px">
         <q-card-section>
-          Voulez-vous vraiment quitter la partie ?
+          Voulez-vous vraiment quitter la partie ? Vous allez perdre votre progression.
         </q-card-section>
 
         <q-card-actions align="right">
@@ -149,8 +149,6 @@
     </div>
     <q-btn class="party__quit-btn q-mt-md q-mr-lg fixed" color="red" icon="logout"
       round size="15px" @click.prevent="showLeavePartyModal = true" />
-    <q-btn class="party__share-btn q-mt-md q-ml-lg fixed" color="primary" icon="share"
-      round size="15px" @click.prevent="share()" />
   </q-page>
 </template>
 
@@ -159,7 +157,6 @@ import { SessionStorage, uid, Loading } from 'quasar'
 import { useRoute } from 'vue-router'
 import { api } from 'boot/axios'
 import notify from 'src/services/notify'
-import { Share } from '@capacitor/share'
 import translate from 'src/services/translate'
 import PartyHelper from 'src/helpers/PartyHelper'
 
@@ -167,27 +164,6 @@ export default {
   name: 'PartyPage',
   setup() {
     const route = useRoute()
-
-    window.Echo.channel('party.' + route.params.uid)
-      .listen('UserJoined', (e) => {
-        console.log('User Joined!', e.user)
-      })
-      .listen('UserLeaved', (e) => {
-        console.log('User Leaved', e.user)
-      })
-      .listen('UserDraw', (e) => {
-        console.log('User Draw', e)
-      })
-      .listen('UserMove', (e) => {
-        const user = this.components.find((user) => user.id === e.userId)
-        if (user) {
-          user.cardDraw = e.newCardDraw
-          user.cardDrawCount = e.newCardDrawCount
-          user.deck = e.userDeck
-          this.party.stack = e.partyStack
-        }
-      })
-
     return {
       route
     }
@@ -241,12 +217,26 @@ export default {
       selectedCard: null,
       showLeavePartyModal: false,
       leaveLoading: false,
-      party: null,
-      myTurn: false
+      party: null
     }
   },
   created() {
     Loading.show()
+
+    window.Echo.channel('party.' + this.route.params.uid)
+      .listen('UserJoined', (e) => {
+        console.log('User Joined!', e.user)
+      })
+      .listen('UserLeaved', (e) => {
+        console.log('User Leaved', e.user)
+      })
+      .listen('UserDraw', (e) => {
+        console.log('User Draw', e)
+      })
+      .listen('UserMove', (e) => {
+        this.userMove(e)
+      })
+
     Promise.all([
       this.loadUser(),
       this.loadPartyUser(),
@@ -257,10 +247,20 @@ export default {
     })
   },
   methods: {
+    userMove(e) {
+      this.party.myTurn = e.userToPlayId === SessionStorage.getItem('user').id
+      this.party.userToPlayId = e.userToPlayId
+      const user = this.party.opponents.find((user) => user.id === e.user.id)
+      if (user) {
+        user.cardDraw = e.newCardDraw
+        user.cardDrawCount = e.newCardDrawCount
+        user.deck = e.userDeck
+        this.party.stack = e.partyStack
+      }
+    },
     loadParty() {
       return api.get('/party/' + this.route.params.uid).then((res) => {
         this.party = res.data
-        this.myTurn = res.data.myTurn
       })
     },
     loadPartyUser() {
@@ -277,14 +277,6 @@ export default {
         this.user.username = res.data.username
       })
     },
-    share() {
-      Share.share({
-        title: 'Inviter un ami',
-        text: 'Clique sur le lien ci-dessous, ou rend toi sur l\'application Skip-Bo\'nline et rentre le code d\'accès suivant : ' + this.party.joinCode,
-        url: `https://skip-bo.online/#/party/join/${this.party.joinCode}`,
-        dialogTitle: 'Inviter un ami'
-      })
-    },
     leave() {
       this.leaveLoading = true
       api.post('/party/leave', { data: this.route.params.uid, type: PartyHelper.CODE_TYPE_PARTY_ID }).then(() => {
@@ -296,7 +288,8 @@ export default {
       })
     },
     selectCard(card) {
-      if (!this.myTurn) {
+      console.log(this.party)
+      if (!this.party.myTurn) {
         return
       }
       if (this.selectedCard && this.selectedCard === card) {
@@ -307,9 +300,12 @@ export default {
       console.log(this.selectedCard)
     },
     clickOnStackInDeck(stackIndex) {
-      if (!this.selectedCard || !this.myTurn || this.user.cardDraw.uid == this.selectedCard.uid) {
+      if (!this.selectedCard || !this.party.myTurn || this.user.cardDraw.uid === this.selectedCard.uid) {
         return
       }
+
+      const previousDeck = this.user.deck
+      const previousHand = this.user.hand
 
       api.post('/party/move', {
         partyId: this.party.partyId,
@@ -320,11 +316,18 @@ export default {
       }).then((res) => {
         this.user.deck = res.data.deck
         this.user.hand = res.data.hand
-        this.selectedCard = null
-        this.myTurn = false
       }).catch((err) => {
+        this.user.deck = previousDeck
+        this.user.hand = previousHand
+        this.party.myTurn = true
         translate().showErrorMessage(err.response ? err.response.data.message : err.message)
       })
+
+      this.user.hand = this.user.hand.filter((card) => card.uid !== this.selectedCard.uid)
+      this.user.deck[stackIndex].push(this.selectedCard)
+
+      this.selectedCard = null
+      this.party.myTurn = false
     },
     selectCardDefausseCentrale(pile, index) {
       if (this.selectedCard !== null) {
