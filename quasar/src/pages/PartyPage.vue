@@ -100,14 +100,14 @@
         </div>
         <div class="deck-joueur">
           <div
-            @click="dropInDeck(index)"
+            @click="clickOnStackInDeck(stack)"
             class="card column no-wrap"
-            v-for="(pile, index) in user.deck"
+            v-for="(stack, index) in user.deck"
             :key="index"
           >
             <!--{{ card }}-->
             <img
-              v-for="card in pile"
+              v-for="card in stack"
               :key="card.uid"
               class="image-card image-card-deck"
               :src="`/assets/${card.value}.png`"
@@ -171,6 +171,12 @@ export default {
       .listen('UserLeaved', (e) => {
         console.log('User Leaved', e.user)
       })
+      .listen('UserDraw', (e) => {
+        console.log('User Draw', e)
+      })
+      .listen('UserMove', (e) => {
+        console.log('UserMove', e)
+      })
 
     return {
       route
@@ -220,7 +226,8 @@ export default {
       selectedCard: null,
       showLeavePartyModal: false,
       leaveLoading: false,
-      party: null
+      party: null,
+      myTurn: false
     }
   },
   created() {
@@ -280,19 +287,23 @@ export default {
       }
       console.log(this.selectedCard)
     },
-    dropInDeck(index) {
+    clickOnStackInDeck(stack) {
       if (this.selectedCard) {
-        this.user.deck[index].push(this.selectedCard)
-
         // delete card from hand
-
-        const indexCarteDansMain = this.user.hand.findIndex(
-          (card) => card.value === this.selectedCard.value
-        )
-
-        if (indexCarteDansMain !== -1) {
-          this.user.hand.splice(indexCarteDansMain, 1)
+        if (this.user.cardDraw.uid === this.selectedCard.uid) {
+          // draw new card
+          api.post('/party/draw/player', { partyId: this.party.id }).then((res) => {
+            if (res.data.cardDraw || (!res.data.cardDraw && res.data.cardDrawCount <= 0)) {
+              this.user.cardDraw = res.data.cardDraw
+              this.user.cardDrawCount = res.data.cardDrawCount
+            }
+          })
+        } else {
+          this.user.hand = this.user.hand.filter((card) => card.uid !== this.selectedCard.uid)
         }
+
+        // add card to stack
+        stack.push(this.selectedCard)
 
         this.selectedCard = null
       }
@@ -553,7 +564,7 @@ export default {
 .cards-hand {
   .card {
     &.selected-card {
-      animation: selectedCard infinite 1.2s ease-in-out;
+      animation: selectedCard infinite 1s ease-in-out;
     }
   }
 }

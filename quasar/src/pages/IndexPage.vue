@@ -61,6 +61,9 @@ export default {
 
       api.post('/party/join', { code: this.joinCode })
         .then((res) => {
+          if (res.data.partyId) {
+            return this.$router.push({ name: 'party', params: { uid: res.data.partyId } })
+          }
           this.$router.push({ name: 'partyLobby', params: { joinCode: res.data.joinCode } })
         })
         .catch((err) => {

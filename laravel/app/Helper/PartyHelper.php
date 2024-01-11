@@ -34,4 +34,23 @@ final class PartyHelper
         self::CODE_TYPE_JOIN_CODE,
         self::CODE_TYPE_PARTY_ID
     ];
+
+    /** @var int  */
+    public const HAND_MAX_SIZE = 5;
+
+    /** @var string  */
+    public const MOVE_TYPE_HAND = 'hand';
+
+    /** @var string  */
+    public const MOVE_TYPE_DECK = 'deck';
+
+    /** @var string  */
+    public const MOVE_TYPE_PARTY_STACK = 'party_stack';
+
+    /** @var string[]  */
+    public const MOVE_TYPES = [
+        self::MOVE_TYPE_HAND,
+        self::MOVE_TYPE_DECK,
+        self::MOVE_TYPE_PARTY_STACK
+    ];
 }
