@@ -59,6 +59,9 @@ class PartyService
         if ($party->status == PartyHelper::STATUS_FINISHED) {
             throw new \Exception('Party is already finished', 400);
         }
+        if ($party->getUserCount() < 2) {
+            throw new \Exception('Not enough players', 400);
+        }
     }
 
     /**
