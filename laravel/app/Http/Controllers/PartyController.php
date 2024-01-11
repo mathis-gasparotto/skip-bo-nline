@@ -43,33 +43,29 @@ class PartyController extends Controller
 
         if ($party->status === PartyHelper::STATUS_STARTED && $request->user()->currentParty == $party) {
             $toReturn['status'] = $party->status;
+            $toReturn['myTurn'] = $party->userToPlay->id === $request->user()->id;
+            $toReturn['userToPlayId'] = $party->userToPlay->id;
 
-            $opponents = $party->partyUsers()->get();
 
-            $indexToRemove = $opponents->search(fn ($opponent) => $opponent->id === $request->user()->id);
+            $opponents = $party->partyUsers()->orderBy('created_at')->get();
 
-            $opponents->splice($indexToRemove);
+            $indexToRemove = $opponents->search(fn (PartyUser $partyUser) => $partyUser->user_id === $request->user()->id);
 
-            $splitCollection = $opponents->split($indexToRemove);
+            $beforeMe = $opponents->reject(fn ($value, int $index) => $index === $indexToRemove);
 
-            $toReturn['opponents'] = $splitCollection[1]->concat($splitCollection[0])->map(fn (PartyUser $partyUser) => [
+            $afterMe = $beforeMe->splice($indexToRemove);
+            $opponentsToReturn = $afterMe->merge($beforeMe);
+
+
+            $toReturn['opponents'] = $opponentsToReturn->map(fn (PartyUser $partyUser) => [
                 'id' => $partyUser->user->id,
                 'username' => $partyUser->user->username,
                 'avatar' => $partyUser->user->avatar,
                 'cardDrawCount' => $partyUser->card_draw_count,
                 'cardDraw' => json_decode($partyUser->card_draw),
-                'hand' => json_decode($partyUser->hand),
+//                'hand' => json_decode($partyUser->hand),
                 'deck' => json_decode($partyUser->deck),
             ]);
-//            $toReturn['opponents'] = $party->partyUsers()->where('user_id', '!=', $request->user()->id)->get()->map(fn (PartyUser $partyUser) => [
-//                'id' => $partyUser->user->id,
-//                'username' => $partyUser->user->username,
-//                'avatar' => $partyUser->user->avatar,
-//                'cardDrawCount' => $partyUser->card_draw_count,
-//                'cardDraw' => json_decode($partyUser->card_draw),
-//                'hand' => json_decode($partyUser->hand),
-//                'deck' => json_decode($partyUser->deck),
-//            ]);
             $toReturn['stack'] = json_decode($party->stack);
         }
 
