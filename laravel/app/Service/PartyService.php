@@ -340,8 +340,8 @@ class PartyService
             $user->id,
             $partyUser->party->id,
             $cardUid, $deck,
-            json_decode($partyUser->party->stack, true),
-            json_decode($partyUser->card_draw, true),
+            json_decode($partyUser->party->stack),
+            json_decode($partyUser->card_draw),
             $partyUser->card_draw_count,
             $nextPlayer->id
         );
@@ -362,15 +362,22 @@ class PartyService
      */
     private function moveHandToPartyStack(User $user, PartyUser $partyUser, string $cardUid, int $stackIndex): array
     {
-        $hand = json_decode($partyUser->hand, true);
+        $hand = json_decode($partyUser->hand);
         $party = $partyUser->party;
-        $partyStack = json_decode($party->stack, true);
+        $partyStack = json_decode($party->stack);
 
         $card = array_values(array_filter($hand, fn ($card) => $card->uid == $cardUid));
         if (!isset($card[0])) {
             throw new \Exception('Card not found', 404);
         } else {
             $card = $card[0];
+        }
+
+        // Check if the card can be placed on the stack
+        $lastPartyStackCard = end($partyStack[$stackIndex]);
+        $lastPartyStackCardValue = $lastPartyStackCard ? $lastPartyStackCard->value : 0;
+        if ($card->value !== $lastPartyStackCardValue + 1) {
+            throw new \Exception('Invalid move', 400);
         }
 
         $hand = array_values(array_filter($hand, fn ($card) => $card->uid != $cardUid));
@@ -385,9 +392,9 @@ class PartyService
             $user->id,
             $partyUser->party->id,
             $cardUid,
-            json_decode($partyUser->deck, true),
+            json_decode($partyUser->deck),
             $partyStack,
-            json_decode($partyUser->card_draw, true),
+            json_decode($partyUser->card_draw),
             $partyUser->card_draw_count,
             $party->userToPlay->id
         );
@@ -409,9 +416,9 @@ class PartyService
      */
     private function moveDeckToPartyStack(User $user, PartyUser $partyUser, string $cardUid, int $fromStackIndex, int $toStackIndex): array
     {
-        $deck = json_decode($partyUser->deck, true);
+        $deck = json_decode($partyUser->deck);
         $party = $partyUser->party;
-        $partyStack = json_decode($party->stack, true);
+        $partyStack = json_decode($party->stack);
 
         $card = array_values(array_filter($deck[$fromStackIndex], fn ($card) => $card->uid == $cardUid));
         if (!isset($card[0])) {
@@ -434,7 +441,7 @@ class PartyService
             $cardUid,
             $deck,
             $partyStack,
-            json_decode($partyUser->card_draw, true),
+            json_decode($partyUser->card_draw),
             $partyUser->card_draw_count,
             $party->userToPlay->id
         );
@@ -455,13 +462,13 @@ class PartyService
      */
     private function movePlayerDrawToPartyStack(User $user, PartyUser $partyUser, string $cardUid, int $toStackIndex): array
     {
-        $playerCardDraw = json_decode($partyUser->card_draw, true);
+        $playerCardDraw = json_decode($partyUser->card_draw);
         if (!$playerCardDraw) {
             throw new \Exception('Card not found', 404);
         }
 
         $party = $partyUser->party;
-        $partyStack = json_decode($party->stack, true);
+        $partyStack = json_decode($party->stack);
         [$newCardDraw, $newCardDrawCount] = $this->pickPlayerCard($partyUser);
 
         $partyStack[$toStackIndex][] = $newCardDraw;
@@ -473,7 +480,7 @@ class PartyService
             $user->id,
             $partyUser->party->id,
             $cardUid,
-            json_decode($partyUser->deck, true),
+            json_decode($partyUser->deck),
             $partyStack,
             $newCardDraw,
             $newCardDrawCount,

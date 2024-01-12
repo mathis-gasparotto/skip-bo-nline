@@ -74,7 +74,7 @@
       </div>
       <div class="deck-joueurs">
         <div
-          @click="selectCardDefausseCentrale(pile, index)"
+          @click="selectCardDefausseCentrale(index)"
           class="card"
           v-for="(pile, index) in party.stack"
           :key="index"
@@ -329,23 +329,43 @@ export default {
       this.selectedCard = null
       this.party.myTurn = false
     },
-    selectCardDefausseCentrale(pile, index) {
-      if (this.selectedCard !== null) {
+    selectCardDefausseCentrale(index) {
+      if (this.selectedCard !== null && this.party.myTurn) {
         // Récupérer la dernière card de la pile sans la retirer
-        const derniereCarteDansPile = pile.slice(-1)[0]
+        const lastStackCard = this.party.stack[index].slice(-1)[0]
+        const lastStackCardValue = lastStackCard ? lastStackCard.value : 0
         console.log(this.selectedCard)
         // Vérifier si la card sélectionnée est +1 par rapport à la card actuelle
-        if (this.selectedCard.value === derniereCarteDansPile.value + 1) {
+        if (this.selectedCard.value === lastStackCardValue + 1) {
+          const previousPartyStack = this.party.stack
+          const previousHand = this.user.hand
+
+          // API Request
+          api.post('/party/move', {
+            partyId: this.party.partyId,
+            from: PartyHelper.MOVE_TYPE_HAND,
+            to: PartyHelper.MOVE_TYPE_PARTY_STACK,
+            cardUid: this.selectedCard.uid,
+            toStackIndex: index
+          }).then((res) => {
+            this.party.stack = res.data.partyStack
+            this.user.hand = res.data.hand
+          }).catch((err) => {
+            this.party.stack = previousPartyStack
+            this.user.hand = previousHand
+            translate().showErrorMessage(err.response ? err.response.data.message : err.message)
+          })
+
           // Déplacer la card vers la défausse centrale
-          this.plateauCentre.deck[index].push(this.selectedCard.value)
+          this.party.stack[index].push(this.selectedCard)
 
           // Retirer la card de la main du joueur en la recherchant par son numéro
-          const indexCarteDansMain = this.user.hand.findIndex(
-            (cardMain) => cardMain.value === this.selectedCard.value
+          const handCardIndex = this.user.hand.findIndex(
+            (card) => card.value === this.selectedCard.value
           )
 
-          if (indexCarteDansMain !== -1) {
-            this.user.hand.splice(indexCarteDansMain, 1)
+          if (handCardIndex !== -1) {
+            this.user.hand.splice(handCardIndex, 1)
           }
 
           this.selectedCard = null
@@ -559,6 +579,10 @@ export default {
   width: 38px;
   height: 58px;
   border-radius: 10%;
+  &-deck-center {
+    width: 28px;
+    height: 48px;
+  }
 }
 .deck-joueur .card .image-card {
   width: 28px;
@@ -575,10 +599,13 @@ export default {
   height: 35px;
 }
 
-.cardDraw-autre-joueur .card .image-card,
 .cardDraw-autre-joueur .card {
   width: 30px;
   height: 45px;
+  .image-card {
+    width: 28px;
+    height: 43px;
+  }
 }
 
 .cardDraw-joueur,
