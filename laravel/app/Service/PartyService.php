@@ -356,11 +356,11 @@ class PartyService
      * @param User $user
      * @param PartyUser $partyUser
      * @param string $cardUid
-     * @param int $stackIndex
+     * @param int $toStackIndex
      * @return array
      * @throws \Exception
      */
-    private function moveHandToPartyStack(User $user, PartyUser $partyUser, string $cardUid, int $stackIndex): array
+    private function moveHandToPartyStack(User $user, PartyUser $partyUser, string $cardUid, int $toStackIndex): array
     {
         $hand = json_decode($partyUser->hand);
         $party = $partyUser->party;
@@ -374,14 +374,10 @@ class PartyService
         }
 
         // Check if the card can be placed on the stack
-        $lastPartyStackCard = end($partyStack[$stackIndex]);
-        $lastPartyStackCardValue = $lastPartyStackCard ? $lastPartyStackCard->value : 0;
-        if ($card->value !== $lastPartyStackCardValue + 1) {
-            throw new \Exception('Invalid move', 400);
-        }
+        $this->checkCardForPartyStack($card->value, $partyStack[$toStackIndex]);
 
         $hand = array_values(array_filter($hand, fn ($card) => $card->uid != $cardUid));
-        $partyStack[$stackIndex][] = $card;
+        $partyStack[$toStackIndex][] = $card;
 
         $partyUser->hand = json_encode($hand);
         $party->stack = json_encode($partyStack);
@@ -426,6 +422,12 @@ class PartyService
         } else {
             $card = $card[0];
         }
+
+        // Check if the card can be placed on the stack
+        $this->checkCardForPickFromPlayerDeck($card->uid, $deck[$fromStackIndex]);
+
+        // Check if the card can be placed on the stack
+        $this->checkCardForPartyStack($card->value, $partyStack[$toStackIndex]);
 
         $deck[$fromStackIndex] = array_values(array_filter($deck[$fromStackIndex], fn ($card) => $card->uid != $cardUid));
         $partyStack[$toStackIndex][] = $card;
@@ -524,5 +526,34 @@ class PartyService
 
         $afterMe = $beforeMe->splice($indexToRemove);
         return $afterMe->merge($beforeMe);
+    }
+
+    /**
+     * @param int $cardValue
+     * @param array $stack
+     * @return void
+     * @throws \Exception
+     */
+    private function checkCardForPartyStack(int $cardValue, array $stack): void
+    {
+        $lastCard = end($stack);
+        $lastCardValue = $lastCard ? $lastCard->value : 0;
+        if ($cardValue !== $lastCardValue + 1) {
+            throw new \Exception('Invalid move', 400);
+        }
+    }
+
+    /**
+     * @param string $cardUid
+     * @param array $stack
+     * @return void
+     * @throws \Exception
+     */
+    private function checkCardForPickFromPlayerDeck(string $cardUid, array $stack): void
+    {
+        $lastCardFromStack = end($stack);
+        if ($lastCardFromStack->uid !== $cardUid) {
+            throw new \Exception('Invalid move', 400);
+        }
     }
 }

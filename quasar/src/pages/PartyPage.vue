@@ -28,7 +28,7 @@
         <p class="username">{{ opponent.username }}</p>
         <div class="deck-autre-joueur">
           <div
-            class="card"
+            class="card column no-wrap"
             v-for="(pile, index) in opponent.deck"
             :key="index"
           >
@@ -115,6 +115,7 @@
               v-for="card in stack"
               :key="card.uid"
               class="image-card image-card-deck"
+              :class="{ 'selected-card': selectedCard === card }"
               :src="`/assets/${card.value}.png`"
               :alt="`${card.value}`"
             />
@@ -300,7 +301,17 @@ export default {
       console.log(this.selectedCard)
     },
     clickOnStackInDeck(stackIndex) {
-      if (!this.selectedCard || !this.party.myTurn || this.user.cardDraw.uid === this.selectedCard.uid) {
+      if ( this.selectedCard && (
+        !this.party.myTurn ||
+        this.user.cardDraw.uid === this.selectedCard.uid ||
+        this.user.deck.some((stack) => stack.some((card) => card.uid === this.selectedCard.uid))
+      )) {
+        return
+      }
+
+      if (!this.selectedCard) {
+        this.selectedCard = this.user.deck[stackIndex].slice(-1)[0]
+        console.log(this.selectedCard)
         return
       }
 
@@ -338,34 +349,68 @@ export default {
         // Vérifier si la card sélectionnée est +1 par rapport à la card actuelle
         if (this.selectedCard.value === lastStackCardValue + 1) {
           const previousPartyStack = this.party.stack
-          const previousHand = this.user.hand
 
-          // API Request
-          api.post('/party/move', {
-            partyId: this.party.partyId,
-            from: PartyHelper.MOVE_TYPE_HAND,
-            to: PartyHelper.MOVE_TYPE_PARTY_STACK,
-            cardUid: this.selectedCard.uid,
-            toStackIndex: index
-          }).then((res) => {
-            this.party.stack = res.data.partyStack
-            this.user.hand = res.data.hand
-          }).catch((err) => {
-            this.party.stack = previousPartyStack
-            this.user.hand = previousHand
-            translate().showErrorMessage(err.response ? err.response.data.message : err.message)
-          })
+          const fromHand = this.user.hand.some((card) => card.uid === this.selectedCard.uid)
+          const fromDeck = this.user.deck.some((stack) => stack.some((card) => card.uid === this.selectedCard.uid))
 
-          // Déplacer la card vers la défausse centrale
-          this.party.stack[index].push(this.selectedCard)
+          if (fromHand) {
+            const previousHand = this.user.hand
 
-          // Retirer la card de la main du joueur en la recherchant par son numéro
-          const handCardIndex = this.user.hand.findIndex(
-            (card) => card.value === this.selectedCard.value
-          )
+            // API Request
+            api.post('/party/move', {
+              partyId: this.party.partyId,
+              from: PartyHelper.MOVE_TYPE_HAND,
+              to: PartyHelper.MOVE_TYPE_PARTY_STACK,
+              cardUid: this.selectedCard.uid,
+              toStackIndex: index
+            }).then((res) => {
+              this.party.stack = res.data.partyStack
+              this.user.hand = res.data.hand
+            }).catch((err) => {
+              this.party.stack = previousPartyStack
+              this.user.hand = previousHand
+              translate().showErrorMessage(err.response ? err.response.data.message : err.message)
+            })
 
-          if (handCardIndex !== -1) {
-            this.user.hand.splice(handCardIndex, 1)
+            // Déplacer la card vers la défausse centrale
+            this.party.stack[index].push(this.selectedCard)
+
+            // Retirer la card de la main du joueur en la recherchant par son numéro
+            const handCardIndex = this.user.hand.findIndex(
+              (card) => card.value === this.selectedCard.value
+            )
+
+            if (handCardIndex !== -1) {
+              this.user.hand.splice(handCardIndex, 1)
+            }
+
+          } else if (fromDeck) {
+            const previousDeck = this.user.deck
+            const fromStackIndex = this.user.deck.findIndex((stack) => stack.some((card) => card.uid === this.selectedCard.uid))
+
+            // API Request
+            api.post('/party/move', {
+              partyId: this.party.partyId,
+              from: PartyHelper.MOVE_TYPE_DECK,
+              to: PartyHelper.MOVE_TYPE_PARTY_STACK,
+              cardUid: this.selectedCard.uid,
+              fromStackIndex,
+              toStackIndex: index
+            }).then((res) => {
+              this.party.stack = res.data.partyStack
+              this.user.deck = res.data.deck
+            }).catch((err) => {
+              this.party.stack = previousPartyStack
+              this.user.deck = previousDeck
+              translate().showErrorMessage(err.response ? err.response.data.message : err.message)
+            })
+
+            // Add card to party stack
+            this.party.stack[index].push(this.selectedCard)
+
+            // Remove card from deck
+            this.user.deck[fromStackIndex].pop()
+
           }
 
           this.selectedCard = null
@@ -444,6 +489,18 @@ export default {
   margin-bottom: 10px;
   display: flex;
   justify-content: space-evenly;
+  .card {
+    .image-card {
+      width: 22px;
+      // show only last 4 cards
+      &:not(:first-child) {
+        margin-top: -150%;
+        &:nth-last-child(-n+4) {
+          margin-top: -22px;
+        }
+      }
+    }
+  }
 }
 .username {
   margin: 15px 0 5px;
@@ -551,10 +608,25 @@ export default {
 /**  Carte  **/
 .card {
   border: 1px solid #333;
-  width: 20px;
-  height: 35px;
+  width: 24px;
+  height: 42px;
   border-radius: 10%;
+  &.selected-card, .selected-card {
+    animation: selectedCard infinite 1s ease-in-out;
+  }
 }
+@keyframes selectedCard {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
 .deck-joueurs .card,
 .deck-joueur .card {
   width: 30px;
@@ -584,19 +656,22 @@ export default {
     height: 48px;
   }
 }
-.deck-joueur .card .image-card {
-  width: 28px;
-  height: 48px;
+.deck-joueur {
+  .card {
+    .image-card {
+      width: 28px;
+      // show only last 4 cards
+      &:not(:first-child) {
+        margin-top: -150%;
+        &:nth-last-child(-n+4) {
+          margin-top: -31px;
+        }
+      }
+    }
+  }
 }
 .image-card-deck-center {
   position: absolute;
-}
-.image-card-deck:not(:first-child) {
-  margin-top: -31px;
-}
-.deck-autre-joueur .card .image-card {
-  width: 20px;
-  height: 35px;
 }
 
 .cardDraw-autre-joueur .card {
@@ -605,27 +680,6 @@ export default {
   .image-card {
     width: 28px;
     height: 43px;
-  }
-}
-
-.cardDraw-joueur,
-.cards-hand {
-  .card {
-    &.selected-card {
-      animation: selectedCard infinite 1s ease-in-out;
-    }
-  }
-}
-
-@keyframes selectedCard {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0);
   }
 }
 </style>
