@@ -209,7 +209,7 @@ class PartyController extends Controller
             'from' => 'required|string',
             'to' => 'required|string',
             'partyId' => 'required|string',
-            'cardUid' => 'required|string',
+            'cardUid' => 'nullable|string',
             'fromStackIndex' => 'nullable|int|min:0|max:3',
             'toStackIndex' => 'nullable|int|min:0|max:3',
         ]);

@@ -270,13 +270,13 @@ class PartyService
      * @param string $partyId
      * @param string $from
      * @param string $to
-     * @param string $cardUid
+     * @param string|null $cardUid
      * @param int|null $fromStackIndex
      * @param int|null $toStackIndex
      * @return array
      * @throws \Exception
      */
-    public function move(User $user, string $partyId, string $from, string $to, string $cardUid, int|null $fromStackIndex, int|null $toStackIndex): array
+    public function move(User $user, string $partyId, string $from, string $to, string|null $cardUid, int|null $fromStackIndex, int|null $toStackIndex): array
     {
         $partyUser = $user->getPartyUser($partyId);
         $party = $partyUser->party;
@@ -301,7 +301,7 @@ class PartyService
             return $this->moveDeckToPartyStack($user, $partyUser, $cardUid, $fromStackIndex, $toStackIndex);
 
         } elseif ($from === PartyHelper::MOVE_TYPE_PLAYER_CARD_DRAW && $to === PartyHelper::MOVE_TYPE_PARTY_STACK && $toStackIndex !== null) {
-            return $this->movePlayerDrawToPartyStack($user, $partyUser, $cardUid, $toStackIndex);
+            return $this->movePlayerDrawToPartyStack($user, $partyUser, $toStackIndex);
 
         } else {
             throw new \Exception('Invalid move', 400);
@@ -339,7 +339,7 @@ class PartyService
         UserMove::dispatch(
             $user->id,
             $partyUser->party->id,
-            $cardUid, $deck,
+            $deck,
             json_decode($partyUser->party->stack),
             json_decode($partyUser->card_draw),
             $partyUser->card_draw_count,
@@ -387,7 +387,6 @@ class PartyService
         UserMove::dispatch(
             $user->id,
             $partyUser->party->id,
-            $cardUid,
             json_decode($partyUser->deck),
             $partyStack,
             json_decode($partyUser->card_draw),
@@ -440,7 +439,6 @@ class PartyService
         UserMove::dispatch(
             $user->id,
             $partyUser->party->id,
-            $cardUid,
             $deck,
             $partyStack,
             json_decode($partyUser->card_draw),
@@ -457,12 +455,11 @@ class PartyService
     /**
      * @param User $user
      * @param PartyUser $partyUser
-     * @param string $cardUid
      * @param int $toStackIndex
      * @return array
      * @throws \Exception
      */
-    private function movePlayerDrawToPartyStack(User $user, PartyUser $partyUser, string $cardUid, int $toStackIndex): array
+    private function movePlayerDrawToPartyStack(User $user, PartyUser $partyUser, int $toStackIndex): array
     {
         $playerCardDraw = json_decode($partyUser->card_draw);
         if (!$playerCardDraw) {
@@ -471,9 +468,13 @@ class PartyService
 
         $party = $partyUser->party;
         $partyStack = json_decode($party->stack);
+
+        // Check if the card can be placed on the stack
+        $this->checkCardForPartyStack($playerCardDraw->value, $partyStack[$toStackIndex]);
+
         [$newCardDraw, $newCardDrawCount] = $this->pickPlayerCard($partyUser);
 
-        $partyStack[$toStackIndex][] = $newCardDraw;
+        $partyStack[$toStackIndex][] = $playerCardDraw;
 
         $party->stack = json_encode($partyStack);
         $party->save();
@@ -481,7 +482,6 @@ class PartyService
         UserMove::dispatch(
             $user->id,
             $partyUser->party->id,
-            $cardUid,
             json_decode($partyUser->deck),
             $partyStack,
             $newCardDraw,

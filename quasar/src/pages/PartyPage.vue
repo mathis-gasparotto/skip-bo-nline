@@ -74,7 +74,7 @@
       </div>
       <div class="deck-joueurs">
         <div
-          @click="selectCardDefausseCentrale(index)"
+          @click="selectStackOnPartyStacks(index)"
           class="card"
           v-for="(pile, index) in party.stack"
           :key="index"
@@ -110,7 +110,6 @@
             v-for="(stack, index) in user.deck"
             :key="index"
           >
-            <!--{{ card }}-->
             <img
               v-for="card in stack"
               :key="card.uid"
@@ -340,18 +339,20 @@ export default {
       this.selectedCard = null
       this.party.myTurn = false
     },
-    selectCardDefausseCentrale(index) {
+    selectStackOnPartyStacks(index) {
       if (this.selectedCard !== null && this.party.myTurn) {
         // Récupérer la dernière card de la pile sans la retirer
         const lastStackCard = this.party.stack[index].slice(-1)[0]
         const lastStackCardValue = lastStackCard ? lastStackCard.value : 0
         console.log(this.selectedCard)
+
         // Vérifier si la card sélectionnée est +1 par rapport à la card actuelle
         if (this.selectedCard.value === lastStackCardValue + 1) {
           const previousPartyStack = this.party.stack
 
           const fromHand = this.user.hand.some((card) => card.uid === this.selectedCard.uid)
           const fromDeck = this.user.deck.some((stack) => stack.some((card) => card.uid === this.selectedCard.uid))
+          const fromCardDraw = this.user.cardDraw == this.selectedCard
 
           if (fromHand) {
             const previousHand = this.user.hand
@@ -410,6 +411,29 @@ export default {
 
             // Remove card from deck
             this.user.deck[fromStackIndex].pop()
+
+          } else if (fromCardDraw) {
+            const previousCardDraw = this.user.cardDraw
+            const previousCardDrawCount = this.user.cardDrawCount
+
+            // API Request
+            api.post('/party/move', {
+              partyId: this.party.partyId,
+              from: PartyHelper.MOVE_TYPE_PLAYER_CARD_DRAW,
+              to: PartyHelper.MOVE_TYPE_PARTY_STACK,
+              toStackIndex: index
+            }).then((res) => {
+              this.party.stack = res.data.partyStack
+              this.user.cardDraw = res.data.newCardDraw
+              this.user.cardDrawCount = res.data.newCardDrawCount
+            }).catch((err) => {
+              this.user.cardDraw = previousCardDraw
+              this.user.cardDrawCount = previousCardDrawCount
+              translate().showErrorMessage(err.response ? err.response.data.message : err.message)
+            })
+
+            // Add card to party stack
+            this.party.stack[index].push(this.selectedCard)
 
           }
 

@@ -33,9 +33,7 @@ class UserLeaved implements ShouldBroadcast
     )
     {
         $this->user = [
-            'id' => $user->id,
-            'avatar' => $user->avatar,
-            'username' => $user->username,
+            'id' => $user->id
         ];
     }
 
