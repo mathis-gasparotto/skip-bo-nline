@@ -29,7 +29,6 @@ class UserMove implements ShouldBroadcast
     public function __construct(
         int $userId,
         public string $partyId,
-        public string $cardUid,
         public array|object $userDeck,
         public array|object $partyStack,
         public array|object $newCardDraw,
