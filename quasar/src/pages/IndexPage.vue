@@ -24,7 +24,7 @@
         </q-form>
       </q-card>
     </q-dialog>
-    <q-banner class="bg-primary text-white" v-if="user.current_party">
+    <q-banner rounded class="bg-primary text-white" v-if="user.current_party">
       Vous avez une partie en cours
       <template v-slot:action>
         <q-btn flat color="white" label="Rejoindre" @click="$router.push({name: 'party', params: { uid: user.current_party }})" />
