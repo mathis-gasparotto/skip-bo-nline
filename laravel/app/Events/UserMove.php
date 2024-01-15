@@ -36,7 +36,7 @@ class UserMove implements ShouldBroadcast
         public string $partyId,
         public array|object $userDeck,
         public array|object $partyStack,
-        public array|object $newCardDraw,
+        public array|object|null $newCardDraw,
         public int $newCardDrawCount,
         public int $userToPlayId,
         int|null $userWinId = null

@@ -126,7 +126,10 @@ class PartyController extends Controller
 
         $party = $this->partyService->getParty($request->input('data'), $request->input('type'));
 
-        if ($party->status !== PartyHelper::STATUS_PENDING && $request->user()->currentParty != $party) {
+        if (
+            ($party->status !== PartyHelper::STATUS_PENDING && $request->user()->currentParty != $party) ||
+            $party->status === PartyHelper::STATUS_FINISHED
+        ) {
             throw new \Exception('You are not allow to join this party', 400);
         }
 
