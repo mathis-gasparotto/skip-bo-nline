@@ -224,14 +224,8 @@ export default {
     Loading.show()
 
     window.Echo.channel('party.' + this.route.params.uid)
-      .listen('UserJoined', (e) => {
-        console.log('User Joined!', e.user)
-      })
       .listen('UserLeaved', (e) => {
-        console.log('User Leaved', e.user)
-      })
-      .listen('UserDraw', (e) => {
-        console.log('User Draw', e)
+        this.removeUserFromParty(e.user.id)
       })
       .listen('UserMove', (e) => {
         this.userMove(e)
@@ -247,6 +241,9 @@ export default {
     })
   },
   methods: {
+    removeUserFromParty(userId) {
+      this.party.opponents = this.party.opponents.filter((opponent) => opponent.id !== userId)
+    },
     userMove(e) {
       this.party.myTurn = e.userToPlayId === SessionStorage.getItem('user').id
       this.party.userToPlayId = e.userToPlayId

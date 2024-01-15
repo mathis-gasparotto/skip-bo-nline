@@ -46,7 +46,7 @@ class PartyController extends Controller
             $toReturn['myTurn'] = $party->userToPlay->id === $request->user()->id;
             $toReturn['userToPlayId'] = $party->userToPlay->id;
 
-            $opponents = $this->partyService->getOpponents($request->user(), $party);
+            $opponents = $this->partyService->getOpponents($request->user(), $party)->filter(fn (PartyUser $partyUser) => $partyUser->user->currentParty && $partyUser->user->currentParty->id === $party->id);
             $toReturn['opponents'] = $opponents->map(fn (PartyUser $partyUser) => [
                 'id' => $partyUser->user->id,
                 'username' => $partyUser->user->username,
