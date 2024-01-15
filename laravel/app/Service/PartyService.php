@@ -74,16 +74,18 @@ class PartyService
     {
         $party = $this->getParty($partyId, $identifierType);
 
+        $userParty = PartyUser::where('user_id', $user->id)->where('party_id', $party->id)->first();
+        if (!$userParty) {
+            throw new \Exception('You are not on this party', 403);
+        }
         if ($party->status == PartyHelper::STATUS_PENDING) {
-            $userParty = PartyUser::where('user_id', $user->id)->where('party_id', $party->id)->first();
-            if (!$userParty) {
-                throw new \Exception('You are not on this party', 403);
-            }
             $userParty->delete();
         } elseif ($party->status == PartyHelper::STATUS_STARTED) {
             if ($user->currentParty != $party) {
                 throw new \Exception('You are not on this party', 403);
             }
+            $userParty->win = false;
+            $userParty->save();
             $user->deleteCurrentParty();
         }
 
