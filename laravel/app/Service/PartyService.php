@@ -478,6 +478,13 @@ class PartyService
 
         $partyStack[$toStackIndex][] = $playerCardDraw;
 
+        $win = null;
+        if ($newCardDrawCount <= 0) {
+            $win = true;
+            $this->win($user, $party, $partyUser);
+            $party->status = PartyHelper::STATUS_FINISHED;
+        }
+
         $party->stack = json_encode($partyStack);
         $party->save();
 
@@ -488,13 +495,15 @@ class PartyService
             $partyStack,
             $newCardDraw,
             $newCardDrawCount,
-            $party->userToPlay->id
+            $party->userToPlay->id,
+            $win ? $user->id : null
         );
 
         return [
             'newCardDraw' => $newCardDraw,
             'newCardDrawCount' => $newCardDrawCount,
-            'partyStack' => $partyStack
+            'partyStack' => $partyStack,
+            'win' => $win
         ];
     }
 
@@ -557,5 +566,29 @@ class PartyService
         if ($lastCardFromStack->uid !== $cardUid) {
             throw new \Exception('Invalid move', 400);
         }
+    }
+
+    /**
+     * @param User $user
+     * @param Party $party
+     * @param PartyUser|null $partyUser
+     * @return void
+     * @throws \Exception
+     */
+    private function win(User $user, Party $party, ?PartyUser $partyUser = null): void {
+        $user->deleteCurrentParty();
+
+        if (!$partyUser) {
+            $partyUser = $user->getPartyUser($party->id);
+        }
+        $partyUser->win = true;
+        $partyUser->save();
+
+        // set others as loose
+        $this->getOpponents($user, $party)->each(function (PartyUser $partyUser) {
+            $partyUser->win = false;
+            $partyUser->save();
+            $partyUser->user->deleteCurrentParty();
+        });
     }
 }

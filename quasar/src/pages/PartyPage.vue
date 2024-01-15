@@ -12,6 +12,29 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="showPlayerWhoWin" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <h5 class="q-my-md">{{ playerWhoWin.username }} à gagné.</h5>
+          <p>La prochaine fois ça sera peut-être vous !</p>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Retourner à la page d'accueil" color="primary" @click="backToHome()" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+    <q-dialog v-model="youWin" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <h5 class="q-my-md">Vous avez gagné la partie !! 🎉</h5>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Retourner à la page d'accueil" color="primary" @click="backToHome()" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
     <div class="plateaux-autres-joueurs">
       <div
         class="plateau-autre-joueur"
@@ -44,6 +67,7 @@
         <div class="cardDraw-autre-joueur">
           <div class="card">
             <img
+              v-if="opponent.cardDraw"
               class="image-card"
               :src="`/assets/${opponent.cardDraw.value}.png`"
               :alt="`${opponent.cardDraw.value}`"
@@ -95,6 +119,7 @@
         <div class="cardDraw-joueur">
           <div class="card" :class="{ 'selected-card': selectedCard === user.cardDraw }">
             <img
+              v-if="user.cardDraw"
               @click="selectCard(user.cardDraw)"
               class="image-card"
               :src="`/assets/${user.cardDraw.value}.png`"
@@ -217,7 +242,12 @@ export default {
       selectedCard: null,
       showLeavePartyModal: false,
       leaveLoading: false,
-      party: null
+      party: null,
+      youWin: false,
+      showPlayerWhoWin: false,
+      playerWhoWin: {
+        username: 'Player'
+      }
     }
   },
   created() {
@@ -241,6 +271,14 @@ export default {
     })
   },
   methods: {
+    backToHome() {
+      api.get('/users/me').then((res) => {
+        SessionStorage.set('user', res.data)
+        this.$router.push({ name: 'home' })
+      }).catch((err) => {
+        translate().showErrorMessage(err.response ? err.response.data.message : err.message)
+      })
+    },
     removeUserFromParty(userId) {
       this.party.opponents = this.party.opponents.filter((opponent) => opponent.id !== userId)
     },
@@ -260,11 +298,12 @@ export default {
     },
     userWin(userId) {
       if (userId === SessionStorage.getItem('user').id) {
-        console.log('Vous avez gagné la partie')
+        this.youWin = true
       } else {
         const user = this.party.opponents.find((user) => user.id === userId)
         if (user) {
-          console.log(user.username + ' a gagné la partie')
+          this.playerWhoWin = user
+          this.showPlayerWhoWin = true
         }
       }
     },
@@ -436,6 +475,9 @@ export default {
               this.party.stack = res.data.partyStack
               this.user.cardDraw = res.data.newCardDraw
               this.user.cardDrawCount = res.data.newCardDrawCount
+              if (res.data.win) {
+                this.youWin = true
+              }
             }).catch((err) => {
               this.user.cardDraw = previousCardDraw
               this.user.cardDrawCount = previousCardDrawCount
