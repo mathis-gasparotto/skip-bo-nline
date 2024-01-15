@@ -247,12 +247,25 @@ export default {
     userMove(e) {
       this.party.myTurn = e.userToPlayId === SessionStorage.getItem('user').id
       this.party.userToPlayId = e.userToPlayId
-      const user = this.party.opponents.find((user) => user.id === e.user.id)
-      if (user) {
-        user.cardDraw = e.newCardDraw
-        user.cardDrawCount = e.newCardDrawCount
-        user.deck = e.userDeck
+      const opponent = this.party.opponents.find((user) => user.id === e.user.id)
+      if (opponent) {
+        opponent.cardDraw = e.newCardDraw
+        opponent.cardDrawCount = e.newCardDrawCount
+        opponent.deck = e.userDeck
         this.party.stack = e.partyStack
+      }
+      if (e.userWin) {
+        this.userWin(e.userWin.id)
+      }
+    },
+    userWin(userId) {
+      if (userId === SessionStorage.getItem('user').id) {
+        console.log('Vous avez gagné la partie')
+      } else {
+        const user = this.party.opponents.find((user) => user.id === userId)
+        if (user) {
+          console.log(user.username + ' a gagné la partie')
+        }
       }
     },
     loadParty() {
