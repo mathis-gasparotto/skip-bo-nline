@@ -24,6 +24,11 @@ class UserMove implements ShouldBroadcast
     public array $user;
 
     /**
+     * @var array|null
+     */
+    public ?array $userWin = null;
+
+    /**
      * Create a new event instance.
      */
     public function __construct(
@@ -34,11 +39,16 @@ class UserMove implements ShouldBroadcast
         public array|object $newCardDraw,
         public int $newCardDrawCount,
         public int $userToPlayId,
-    )
-    {
+        int|null $userWinId = null
+    ) {
         $this->user = [
             'id' => $userId
         ];
+        if ($userWinId) {
+            $this->userWin = [
+                'id' => $userWinId
+            ];
+        }
     }
 
     /**
