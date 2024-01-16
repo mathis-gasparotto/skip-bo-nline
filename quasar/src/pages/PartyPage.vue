@@ -100,7 +100,7 @@
         <div
           @click="selectStackOnPartyStacks(index)"
           class="card"
-          v-for="(pile, index) in party.stack"
+          v-for="(pile, index) in party.stacks"
           :key="index"
         >
           <img
@@ -290,7 +290,7 @@ export default {
         opponent.cardDraw = e.newCardDraw
         opponent.cardDrawCount = e.newCardDrawCount
         opponent.deck = e.userDeck
-        this.party.stack = e.partyStack
+        this.party.stacks = e.partyStacks
       }
       if (e.userWin) {
         this.userWin(e.userWin.id)
@@ -391,13 +391,13 @@ export default {
     selectStackOnPartyStacks(index) {
       if (this.selectedCard !== null && this.party.myTurn) {
         // Récupérer la dernière card de la pile sans la retirer
-        const lastStackCard = this.party.stack[index].slice(-1)[0]
+        const lastStackCard = this.party.stacks[index].slice(-1)[0]
         const lastStackCardValue = lastStackCard ? lastStackCard.value : 0
         console.log(this.selectedCard)
 
         // Vérifier si la card sélectionnée est +1 par rapport à la card actuelle
         if (this.selectedCard.value === lastStackCardValue + 1) {
-          const previousPartyStack = this.party.stack
+          const previousPartyStack = this.party.stacks
 
           const fromHand = this.user.hand.some((card) => card.uid === this.selectedCard.uid)
           const fromDeck = this.user.deck.some((stack) => stack.some((card) => card.uid === this.selectedCard.uid))
@@ -414,16 +414,16 @@ export default {
               cardUid: this.selectedCard.uid,
               toStackIndex: index
             }).then((res) => {
-              this.party.stack = res.data.partyStack
+              this.party.stacks = res.data.partyStacks
               this.user.hand = res.data.hand
             }).catch((err) => {
-              this.party.stack = previousPartyStack
+              this.party.stacks = previousPartyStack
               this.user.hand = previousHand
               translate().showErrorMessage(err.response ? err.response.data.message : err.message)
             })
 
             // Déplacer la card vers la défausse centrale
-            this.party.stack[index].push(this.selectedCard)
+            this.party.stacks[index].push(this.selectedCard)
 
             // Retirer la card de la main du joueur en la recherchant par son numéro
             const handCardIndex = this.user.hand.findIndex(
@@ -447,16 +447,16 @@ export default {
               fromStackIndex,
               toStackIndex: index
             }).then((res) => {
-              this.party.stack = res.data.partyStack
+              this.party.stacks = res.data.partyStacks
               this.user.deck = res.data.deck
             }).catch((err) => {
-              this.party.stack = previousPartyStack
+              this.party.stacks = previousPartyStack
               this.user.deck = previousDeck
               translate().showErrorMessage(err.response ? err.response.data.message : err.message)
             })
 
             // Add card to party stack
-            this.party.stack[index].push(this.selectedCard)
+            this.party.stacks[index].push(this.selectedCard)
 
             // Remove card from deck
             this.user.deck[fromStackIndex].pop()
@@ -472,7 +472,7 @@ export default {
               to: PartyHelper.MOVE_TYPE_PARTY_STACK,
               toStackIndex: index
             }).then((res) => {
-              this.party.stack = res.data.partyStack
+              this.party.stacks = res.data.partyStacks
               this.user.cardDraw = res.data.newCardDraw
               this.user.cardDrawCount = res.data.newCardDrawCount
               if (res.data.win) {
@@ -485,7 +485,7 @@ export default {
             })
 
             // Add card to party stack
-            this.party.stack[index].push(this.selectedCard)
+            this.party.stacks[index].push(this.selectedCard)
 
           }
 

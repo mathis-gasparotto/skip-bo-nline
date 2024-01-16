@@ -34,7 +34,7 @@ class PartyService
         foreach ($partyUsers as $partyUser) {
             $user = $partyUser->user;
             $user->setCurrentParty($party);
-            $this->generateUserHand($user, $party);
+            $this->generateCardsOnStartForUser($partyUser);
             PartyStarted::dispatch($party->join_code, $user->id, $party->id);
         }
         $party->status = PartyHelper::STATUS_STARTED;
@@ -102,7 +102,7 @@ class PartyService
 
         $party = new Party([
             'join_code' => $this->generateJoinCode(),
-            'stack' => json_encode([array(), array(), array(), array()]),
+            'stacks' => json_encode([array(), array(), array(), array()]),
             'card_draw_count' => $card_draw_count,
             'status' => PartyHelper::STATUS_PENDING
         ]);
@@ -202,18 +202,23 @@ class PartyService
     }
 
     /**
-     * @param User $user
-     * @param Party $party
+     * @param PartyUser $partyUser
      * @return void
-     * @throws \Exception
      */
-    private function generateUserHand(User $user, Party $party): void
+    private function generateCardsOnStartForUser(PartyUser $partyUser): void
     {
-        $partyUser = $party->partyUsers()->where('user_id', $user->id)->where('party_id', $party->id)->first();
-        if (!$partyUser) {
-            throw new \Exception('User not found in party', 404);
-        }
+        $this->generateUserHand($partyUser);
 
+        $partyUser->card_draw = json_encode(GlobalHelper::randomCard());
+        $partyUser->save();
+    }
+
+    /**
+     * @param PartyUser $partyUser
+     * @return array
+     */
+    private function generateUserHand(PartyUser $partyUser): array
+    {
         $userHand = [
             GlobalHelper::randomCard(),
             GlobalHelper::randomCard(),
@@ -223,8 +228,7 @@ class PartyService
         ];
 
         $partyUser->hand = json_encode($userHand);
-        $partyUser->card_draw = json_encode(GlobalHelper::randomCard());
-        $partyUser->save();
+        return $userHand;
     }
 
     /**
@@ -332,7 +336,8 @@ class PartyService
         $hand = array_values(array_filter($hand, fn ($card) => $card->uid != $cardUid));
         $deck[$stackIndex][] = $card;
 
-        $partyUser->hand = json_encode($hand);
+        $hand = $this->updateUserHand($hand, $partyUser);
+
         $partyUser->deck = json_encode($deck);
         $partyUser->save();
 
@@ -342,7 +347,7 @@ class PartyService
             $user->id,
             $partyUser->party->id,
             $deck,
-            json_decode($partyUser->party->stack),
+            json_decode($partyUser->party->stacks),
             json_decode($partyUser->card_draw),
             $partyUser->card_draw_count,
             $nextPlayer->id
@@ -366,7 +371,7 @@ class PartyService
     {
         $hand = json_decode($partyUser->hand);
         $party = $partyUser->party;
-        $partyStack = json_decode($party->stack);
+        $partyStacks = json_decode($party->stacks);
 
         $card = array_values(array_filter($hand, fn ($card) => $card->uid == $cardUid));
         if (!isset($card[0])) {
@@ -376,13 +381,14 @@ class PartyService
         }
 
         // Check if the card can be placed on the stack
-        $this->checkCardForPartyStack($card->value, $partyStack[$toStackIndex]);
+        $this->checkCardForPartyStack($card->value, $partyStacks[$toStackIndex]);
 
         $hand = array_values(array_filter($hand, fn ($card) => $card->uid != $cardUid));
-        $partyStack[$toStackIndex][] = $card;
+        $partyStacks[$toStackIndex][] = $card;
 
-        $partyUser->hand = json_encode($hand);
-        $party->stack = json_encode($partyStack);
+        $hand = $this->updateUserHand($hand, $partyUser);
+
+        $party->stacks = json_encode($partyStacks);
         $partyUser->save();
         $party->save();
 
@@ -390,7 +396,7 @@ class PartyService
             $user->id,
             $partyUser->party->id,
             json_decode($partyUser->deck),
-            $partyStack,
+            $partyStacks,
             json_decode($partyUser->card_draw),
             $partyUser->card_draw_count,
             $party->userToPlay->id
@@ -398,7 +404,7 @@ class PartyService
 
         return [
             'hand' => $hand,
-            'partyStack' => $partyStack
+            'partyStacks' => $partyStacks
         ];
     }
 
@@ -415,7 +421,7 @@ class PartyService
     {
         $deck = json_decode($partyUser->deck);
         $party = $partyUser->party;
-        $partyStack = json_decode($party->stack);
+        $partyStacks = json_decode($party->stacks);
 
         $card = array_values(array_filter($deck[$fromStackIndex], fn ($card) => $card->uid == $cardUid));
         if (!isset($card[0])) {
@@ -428,13 +434,13 @@ class PartyService
         $this->checkCardForPickFromPlayerDeck($card->uid, $deck[$fromStackIndex]);
 
         // Check if the card can be placed on the stack
-        $this->checkCardForPartyStack($card->value, $partyStack[$toStackIndex]);
+        $this->checkCardForPartyStack($card->value, $partyStacks[$toStackIndex]);
 
         $deck[$fromStackIndex] = array_values(array_filter($deck[$fromStackIndex], fn ($card) => $card->uid != $cardUid));
-        $partyStack[$toStackIndex][] = $card;
+        $partyStacks[$toStackIndex][] = $card;
 
         $partyUser->deck = json_encode($deck);
-        $party->stack = json_encode($partyStack);
+        $party->stacks = json_encode($partyStacks);
         $partyUser->save();
         $party->save();
 
@@ -442,7 +448,7 @@ class PartyService
             $user->id,
             $partyUser->party->id,
             $deck,
-            $partyStack,
+            $partyStacks,
             json_decode($partyUser->card_draw),
             $partyUser->card_draw_count,
             $party->userToPlay->id
@@ -450,7 +456,7 @@ class PartyService
 
         return [
             'deck' => $deck,
-            'partyStack' => $partyStack
+            'partyStacks' => $partyStacks
         ];
     }
 
@@ -469,14 +475,14 @@ class PartyService
         }
 
         $party = $partyUser->party;
-        $partyStack = json_decode($party->stack);
+        $partyStacks = json_decode($party->stacks);
 
         // Check if the card can be placed on the stack
-        $this->checkCardForPartyStack($playerCardDraw->value, $partyStack[$toStackIndex]);
+        $this->checkCardForPartyStack($playerCardDraw->value, $partyStacks[$toStackIndex]);
 
         [$newCardDraw, $newCardDrawCount] = $this->pickPlayerCard($partyUser);
 
-        $partyStack[$toStackIndex][] = $playerCardDraw;
+        $partyStacks[$toStackIndex][] = $playerCardDraw;
 
         $win = null;
         if ($newCardDrawCount <= 0) {
@@ -485,14 +491,14 @@ class PartyService
             $party->status = PartyHelper::STATUS_FINISHED;
         }
 
-        $party->stack = json_encode($partyStack);
+        $party->stacks = json_encode($partyStacks);
         $party->save();
 
         UserMove::dispatch(
             $user->id,
             $partyUser->party->id,
             json_decode($partyUser->deck),
-            $partyStack,
+            $partyStacks,
             $newCardDraw,
             $newCardDrawCount,
             $party->userToPlay->id,
@@ -502,7 +508,7 @@ class PartyService
         return [
             'newCardDraw' => $newCardDraw,
             'newCardDrawCount' => $newCardDrawCount,
-            'partyStack' => $partyStack,
+            'partyStacks' => $partyStacks,
             'win' => $win
         ];
     }
@@ -590,5 +596,20 @@ class PartyService
             $partyUser->save();
             $partyUser->user->deleteCurrentParty();
         });
+    }
+
+    /**
+     * @param array $hand
+     * @param PartyUser $partyUser
+     * @return array
+     */
+    private function updateUserHand(array $hand, PartyUser $partyUser): array
+    {
+        if (count($hand) <= 0) {
+            $hand = $this->generateUserHand($partyUser);
+        } else {
+            $partyUser->hand = json_encode($hand);
+        }
+        return $hand;
     }
 }
