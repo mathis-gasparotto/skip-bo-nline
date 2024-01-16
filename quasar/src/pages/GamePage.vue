@@ -178,7 +178,7 @@
 </template>
 
 <script>
-import { SessionStorage, uid, Loading } from 'quasar'
+import { SessionStorage, uid, Loading, Notify } from 'quasar'
 import { useRoute } from 'vue-router'
 import { api } from 'boot/axios'
 import notify from 'src/services/notify'
@@ -256,6 +256,9 @@ export default {
     window.Echo.channel('game.' + this.route.params.uid)
       .listen('UserLeaved', (e) => {
         this.removeUserFromGame(e.user.id)
+        if (e.gameEnded) {
+          this.userWin()
+        }
       })
       .listen('UserMove', (e) => {
         this.userMove(e)
@@ -283,7 +286,15 @@ export default {
       this.game.opponents = this.game.opponents.filter((opponent) => opponent.id !== userId)
     },
     userMove(e) {
-      this.game.myTurn = e.userToPlayId === SessionStorage.getItem('user').id
+      if (!this.game.myTurn && e.userToPlayId === SessionStorage.getItem('user').id) {
+        this.game.myTurn = true
+        Notify.create({
+          message: 'C\'est à vous de jouer !',
+          color: 'positive',
+          position: 'top',
+          timeout: 2000
+        })
+      }
       this.game.userToPlayId = e.userToPlayId
       const opponent = this.game.opponents.find((user) => user.id === e.user.id)
       if (opponent) {
@@ -296,8 +307,8 @@ export default {
         this.userWin(e.userWin.id)
       }
     },
-    userWin(userId) {
-      if (userId === SessionStorage.getItem('user').id) {
+    userWin(userId = null) {
+      if (userId === null || userId === SessionStorage.getItem('user').id) {
         this.youWin = true
       } else {
         const user = this.game.opponents.find((user) => user.id === userId)
@@ -329,7 +340,7 @@ export default {
     leave() {
       this.leaveLoading = true
       api.post('/game/leave', { data: this.route.params.uid, type: GameHelper.CODE_TYPE_GAME_ID }).then(() => {
-        this.$router.push({ name: 'home' })
+        this.backToHome()
         notify().showPositiveNotify('Vous avez bien quitté la partie')
       }).catch((err) => {
         this.leaveLoading = false

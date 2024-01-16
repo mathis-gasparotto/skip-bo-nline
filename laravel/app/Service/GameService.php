@@ -78,6 +78,8 @@ class GameService
         if (!$userGame) {
             throw new \Exception('You are not on this game', 403);
         }
+        $gameEnded = false;
+
         if ($game->status == GameHelper::STATUS_PENDING) {
             $userGame->delete();
         } elseif ($game->status == GameHelper::STATUS_STARTED) {
@@ -87,9 +89,27 @@ class GameService
             $userGame->win = false;
             $userGame->save();
             $user->deleteCurrentGame();
+
+            if ($game->getUserCount() <= 1) {
+                $gameEnded = true;
+
+                $lastUser = $game->currentUsers()->first();
+                $lastUser->deleteCurrentGame();
+
+                $lastGameUser = $lastUser->getGameUser($game->id);
+                $lastGameUser->win = true;
+
+                $lastUser->save();
+                $lastGameUser->save();
+
+                $game->status = GameHelper::STATUS_FINISHED;
+                $game->save();
+            } else {
+                $this->nextUser($user, $game);
+            }
         }
 
-        UserLeaved::dispatch($user, $game->id, $game->join_code);
+        UserLeaved::dispatch($user, $game->id, $game->join_code, $gameEnded);
     }
 
     /**
@@ -228,6 +248,7 @@ class GameService
         ];
 
         $gameUser->hand = json_encode($userHand);
+        $gameUser->save();
         return $userHand;
     }
 
@@ -336,7 +357,7 @@ class GameService
         $hand = array_values(array_filter($hand, fn ($card) => $card->uid != $cardUid));
         $deck[$stackIndex][] = $card;
 
-        $hand = $this->updateUserHand($hand, $gameUser);
+        $hand = $this->updateUserHand($hand, $gameUser, true);
 
         $gameUser->deck = json_encode($deck);
         $gameUser->save();
@@ -386,7 +407,7 @@ class GameService
         $hand = array_values(array_filter($hand, fn ($card) => $card->uid != $cardUid));
         $gameStacks[$toStackIndex][] = $card;
 
-        $hand = $this->updateUserHand($hand, $gameUser);
+        $hand = $this->updateUserHand($hand, $gameUser, false);
 
         $game->stacks = json_encode($gameStacks);
         $gameUser->save();
@@ -520,12 +541,15 @@ class GameService
      */
     private function nextUser(User $user, Game $game): User
     {
-        $nextPlayer = $this->getOpponents($user, $game)->first()->user;
+        if ($game->userToPlay->id === $user->id) {
+            $nextPlayer = $this->getOpponents($user, $game)->first()->user;
 
-        $game->userToPlay()->associate($nextPlayer);
-        $game->save();
+            $game->userToPlay()->associate($nextPlayer);
+            $game->save();
 
-        return $nextPlayer;
+            return $nextPlayer;
+        }
+        return $game->userToPlay;
     }
 
     /**
@@ -601,14 +625,23 @@ class GameService
     /**
      * @param array $hand
      * @param GameUser $gameUser
+     * @param bool $lastMove
      * @return array
      */
-    private function updateUserHand(array $hand, GameUser $gameUser): array
+    private function updateUserHand(array $hand, GameUser $gameUser, bool $lastMove = false): array
     {
         if (count($hand) <= 0) {
             $hand = $this->generateUserHand($gameUser);
+        } elseif ($lastMove && count($hand) < 5) {
+            $cardsToAdd = 5 - count($hand);
+            for ($i = 0; $i < $cardsToAdd; $i++) {
+                $hand[] = GlobalHelper::randomCard();
+            }
+            $gameUser->hand = json_encode($hand);
+            $gameUser->save();
         } else {
             $gameUser->hand = json_encode($hand);
+            $gameUser->save();
         }
         return $hand;
     }
