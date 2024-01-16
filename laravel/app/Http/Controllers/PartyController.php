@@ -56,7 +56,7 @@ class PartyController extends Controller
 //                'hand' => json_decode($partyUser->hand),
                 'deck' => json_decode($partyUser->deck),
             ]);
-            $toReturn['stack'] = json_decode($party->stack);
+            $toReturn['stacks'] = json_decode($party->stacks);
         }
         if ($party->status === PartyHelper::STATUS_PENDING && $request->user()->isOnTheParty($party->id)) {
             $toReturn['players'] = $party->partyUsers()->orderBy('created_at')->get()->map(fn (PartyUser $partyUser) => [
@@ -65,7 +65,7 @@ class PartyController extends Controller
                 'avatar' => $partyUser->user->avatar,
                 'isMe' => $partyUser->user_id === $request->user()->id,
             ]);
-            $toReturn['stack'] = json_decode($party->stack);
+            $toReturn['stacks'] = json_decode($party->stacks);
         }
 
         return new JsonResponse($toReturn);
