@@ -31,7 +31,7 @@ class Game extends Model
      */
     public function currentUsers()
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(User::class, 'current_game');
     }
 
     /**
@@ -63,6 +63,6 @@ class Game extends Model
      */
     public function getUserCount(): int
     {
-        return $this->gameUsers()->count();
+        return $this->currentUsers()->count();
     }
 }

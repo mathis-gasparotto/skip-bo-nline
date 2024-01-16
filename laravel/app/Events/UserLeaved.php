@@ -29,7 +29,8 @@ class UserLeaved implements ShouldBroadcast
     public function __construct(
         User $user,
         public string $gameId,
-        public string $gameJoinCode
+        public string $gameJoinCode,
+        public bool $gameEnded = false
     )
     {
         $this->user = [
