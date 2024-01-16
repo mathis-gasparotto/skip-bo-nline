@@ -38,6 +38,7 @@
     <div class="plateaux-autres-joueurs">
       <div
         class="plateau-autre-joueur"
+        :class="{ 'user-to-play': game.userToPlayId === opponent.id }"
         v-for="(opponent, index) in game.opponents"
         :key="index"
       >
@@ -128,7 +129,7 @@
           </div>
           <div class="joueur-taillePioche">{{ user.cardDrawCount }}</div>
         </div>
-        <div class="deck-joueur">
+        <div class="deck-joueur" :class="{'user-to-play': game.myTurn}">
           <div
             @click="clickOnStackInDeck(index)"
             class="card column no-wrap"
@@ -758,5 +759,8 @@ export default {
     width: 28px;
     height: 43px;
   }
+}
+.user-to-play {
+  border: 3px solid $primary;
 }
 </style>
