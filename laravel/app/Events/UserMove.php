@@ -33,9 +33,9 @@ class UserMove implements ShouldBroadcast
      */
     public function __construct(
         int $userId,
-        public string $partyId,
+        public string $gameId,
         public array|object $userDeck,
-        public array|object $partyStacks,
+        public array|object $gameStacks,
         public array|object|null $newCardDraw,
         public int $newCardDrawCount,
         public int $userToPlayId,
@@ -59,7 +59,7 @@ class UserMove implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('party.' . $this->partyId),
+            new Channel('game.' . $this->gameId),
         ];
     }
 }

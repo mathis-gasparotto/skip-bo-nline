@@ -52,66 +52,66 @@ class User extends Authenticatable
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function parties()
+    public function games()
     {
-        return $this->hasMany(PartyUser::class);
+        return $this->hasMany(GameUser::class);
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function currentParty()
+    public function currentGame()
     {
-        return $this->belongsTo(Party::class, 'current_party');
+        return $this->belongsTo(Game::class, 'current_game');
     }
 
     /**
-     * @param Party $party
+     * @param Game $game
      * @return void
      */
-    public function setCurrentParty(Party $party): void
+    public function setCurrentGame(Game $game): void
     {
-        $this->currentParty()->associate($party);
+        $this->currentGame()->associate($game);
         $this->save();
     }
 
     /**
      * @return void
      */
-    public function deleteCurrentParty(): void
+    public function deleteCurrentGame(): void
     {
-        $this->currentParty()->dissociate();
+        $this->currentGame()->dissociate();
         $this->save();
     }
 
     /**
-     * @param string $partyId
+     * @param string $gameId
      * @return bool
      */
-    public function isOnTheParty(string $partyId): bool
+    public function isOnTheGame(string $gameId): bool
     {
-        return PartyUser::where('user_id', $this->id)->where('party_id', $partyId)->exists();
+        return GameUser::where('user_id', $this->id)->where('game_id', $gameId)->exists();
     }
 
     /**
-     * @param string $partyId
-     * @return PartyUser
+     * @param string $gameId
+     * @return GameUser
      * @throws \Exception
      */
-    public function getPartyUser(string $partyId): PartyUser
+    public function getGameUser(string $gameId): GameUser
     {
-        $partyUser = PartyUser::where('party_id', $partyId)->where('user_id', $this->id)->first();
-        if (!$partyUser) {
-            throw new \Exception('User not found in party', 404);
+        $gameUser = GameUser::where('game_id', $gameId)->where('user_id', $this->id)->first();
+        if (!$gameUser) {
+            throw new \Exception('User not found in game', 404);
         }
-        return $partyUser;
+        return $gameUser;
     }
 
 //    /**
 //     * @return \Illuminate\Database\Eloquent\Relations\HasMany
 //     */
-//    public function partiesCreated()
+//    public function gamesCreated()
 //    {
-//        return $this->hasMany(Party::class);
+//        return $this->hasMany(Game::class);
 //    }
 }

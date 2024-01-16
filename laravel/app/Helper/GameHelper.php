@@ -2,7 +2,7 @@
 
 namespace App\Helper;
 
-final class PartyHelper
+final class GameHelper
 {
     /** @var string  */
     public const STATUS_PENDING = 'pending';
@@ -17,7 +17,7 @@ final class PartyHelper
     public const CARD_DRAW_COUNT = 5;
 
     /** @var string[]  */
-    public const PARTY_STATUS = [
+    public const GAME_STATUS = [
         self::STATUS_PENDING,
         self::STATUS_STARTED,
         self::STATUS_FINISHED
@@ -27,12 +27,12 @@ final class PartyHelper
     public const CODE_TYPE_JOIN_CODE = 'join_code';
 
     /** @var string  */
-    public const CODE_TYPE_PARTY_ID = 'party_id';
+    public const CODE_TYPE_GAME_ID = 'game_id';
 
     /** @var string[]  */
     public const CODE_TYPES = [
         self::CODE_TYPE_JOIN_CODE,
-        self::CODE_TYPE_PARTY_ID
+        self::CODE_TYPE_GAME_ID
     ];
 
     /** @var int  */
@@ -45,7 +45,7 @@ final class PartyHelper
     public const MOVE_TYPE_DECK = 'deck';
 
     /** @var string  */
-    public const MOVE_TYPE_PARTY_STACK = 'party_stack';
+    public const MOVE_TYPE_GAME_STACK = 'game_stack';
 
     /** @var string  */
     public const MOVE_TYPE_PLAYER_CARD_DRAW = 'player_card_draw';
@@ -54,7 +54,7 @@ final class PartyHelper
     public const MOVE_TYPES = [
         self::MOVE_TYPE_HAND,
         self::MOVE_TYPE_DECK,
-        self::MOVE_TYPE_PARTY_STACK,
+        self::MOVE_TYPE_GAME_STACK,
         self::MOVE_TYPE_PLAYER_CARD_DRAW,
     ];
 }

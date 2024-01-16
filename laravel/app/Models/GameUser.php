@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  *
  */
-class PartyUser extends Model
+class GameUser extends Model
 {
     use HasFactory;
 
@@ -34,8 +34,8 @@ class PartyUser extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function party()
+    public function game()
     {
-        return $this->belongsTo(Party::class);
+        return $this->belongsTo(Game::class);
     }
 }

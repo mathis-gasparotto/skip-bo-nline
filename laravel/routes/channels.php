@@ -17,23 +17,23 @@ use Illuminate\Support\Facades\Broadcast;
 //    return (int) $user->id === (int) $id;
 //});
 
-Broadcast::channel('party.{partyId}', function ($user, $partyId) {
-    if (!$user->isOnTheParty($partyId)) {
+Broadcast::channel('game.{gameId}', function ($user, $gameId) {
+    if (!$user->isOnTheGame($gameId)) {
         return false;
     }
-    $partyService = new \App\Service\PartyService();
-    $party = $partyService->getParty($partyId);
-    return $party->status !== \App\Helper\PartyHelper::STATUS_FINISHED;
+    $gameService = new \App\Service\GameService();
+    $game = $gameService->getGame($gameId);
+    return $game->status !== \App\Helper\GameHelper::STATUS_FINISHED;
 });
 
-Broadcast::channel('party.{partyId}.started.{userId}', function ($user, $partyId, $userId) {
+Broadcast::channel('game.{gameId}.started.{userId}', function ($user, $gameId, $userId) {
     if ($user->id != $userId) {
         return false;
     }
-    if (!$user->isOnTheParty($partyId)) {
+    if (!$user->isOnTheGame($gameId)) {
         return false;
     }
-    $partyService = new \App\Service\PartyService();
-    $party = $partyService->getParty($partyId);
-    return $party->status === \App\Helper\PartyHelper::STATUS_PENDING;
+    $gameService = new \App\Service\GameService();
+    $game = $gameService->getGame($gameId);
+    return $game->status === \App\Helper\GameHelper::STATUS_PENDING;
 });

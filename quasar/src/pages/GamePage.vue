@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-center" v-if="!loading">
-    <q-dialog v-model="showLeavePartyModal">
+    <q-dialog v-model="showLeaveGameModal">
       <q-card style="min-width: 350px">
         <q-card-section>
           Voulez-vous vraiment quitter la partie ? Vous allez perdre votre progression.
@@ -38,7 +38,7 @@
     <div class="plateaux-autres-joueurs">
       <div
         class="plateau-autre-joueur"
-        v-for="(opponent, index) in party.opponents"
+        v-for="(opponent, index) in game.opponents"
         :key="index"
       >
         <q-icon
@@ -98,9 +98,9 @@
       </div>
       <div class="deck-joueurs">
         <div
-          @click="selectStackOnPartyStacks(index)"
+          @click="selectStackOnGameStacks(index)"
           class="card"
-          v-for="(pile, index) in party.stacks"
+          v-for="(pile, index) in game.stacks"
           :key="index"
         >
           <img
@@ -172,8 +172,8 @@
         </div>
       </div>
     </div>
-    <q-btn class="party__quit-btn q-mt-md q-mr-lg fixed" color="red" icon="logout"
-      round size="15px" @click.prevent="showLeavePartyModal = true" />
+    <q-btn class="game__quit-btn q-mt-md q-mr-lg fixed" color="red" icon="logout"
+      round size="15px" @click.prevent="showLeaveGameModal = true" />
   </q-page>
 </template>
 
@@ -183,10 +183,10 @@ import { useRoute } from 'vue-router'
 import { api } from 'boot/axios'
 import notify from 'src/services/notify'
 import translate from 'src/services/translate'
-import PartyHelper from 'src/helpers/PartyHelper'
+import GameHelper from 'src/helpers/GameHelper'
 
 export default {
-  name: 'PartyPage',
+  name: 'GamePage',
   setup() {
     const route = useRoute()
     return {
@@ -240,9 +240,9 @@ export default {
         cardDraw: {}
       },
       selectedCard: null,
-      showLeavePartyModal: false,
+      showLeaveGameModal: false,
       leaveLoading: false,
-      party: null,
+      game: null,
       youWin: false,
       showPlayerWhoWin: false,
       playerWhoWin: {
@@ -253,9 +253,9 @@ export default {
   created() {
     Loading.show()
 
-    window.Echo.channel('party.' + this.route.params.uid)
+    window.Echo.channel('game.' + this.route.params.uid)
       .listen('UserLeaved', (e) => {
-        this.removeUserFromParty(e.user.id)
+        this.removeUserFromGame(e.user.id)
       })
       .listen('UserMove', (e) => {
         this.userMove(e)
@@ -263,8 +263,8 @@ export default {
 
     Promise.all([
       this.loadUser(),
-      this.loadPartyUser(),
-      this.loadParty(),
+      this.loadGameUser(),
+      this.loadGame(),
     ]).then(() => {
       Loading.hide()
       this.loading = false
@@ -279,18 +279,18 @@ export default {
         translate().showErrorMessage(err.response ? err.response.data.message : err.message)
       })
     },
-    removeUserFromParty(userId) {
-      this.party.opponents = this.party.opponents.filter((opponent) => opponent.id !== userId)
+    removeUserFromGame(userId) {
+      this.game.opponents = this.game.opponents.filter((opponent) => opponent.id !== userId)
     },
     userMove(e) {
-      this.party.myTurn = e.userToPlayId === SessionStorage.getItem('user').id
-      this.party.userToPlayId = e.userToPlayId
-      const opponent = this.party.opponents.find((user) => user.id === e.user.id)
+      this.game.myTurn = e.userToPlayId === SessionStorage.getItem('user').id
+      this.game.userToPlayId = e.userToPlayId
+      const opponent = this.game.opponents.find((user) => user.id === e.user.id)
       if (opponent) {
         opponent.cardDraw = e.newCardDraw
         opponent.cardDrawCount = e.newCardDrawCount
         opponent.deck = e.userDeck
-        this.party.stacks = e.partyStacks
+        this.game.stacks = e.gameStacks
       }
       if (e.userWin) {
         this.userWin(e.userWin.id)
@@ -300,20 +300,20 @@ export default {
       if (userId === SessionStorage.getItem('user').id) {
         this.youWin = true
       } else {
-        const user = this.party.opponents.find((user) => user.id === userId)
+        const user = this.game.opponents.find((user) => user.id === userId)
         if (user) {
           this.playerWhoWin = user
           this.showPlayerWhoWin = true
         }
       }
     },
-    loadParty() {
-      return api.get('/party/' + this.route.params.uid).then((res) => {
-        this.party = res.data
+    loadGame() {
+      return api.get('/game/' + this.route.params.uid).then((res) => {
+        this.game = res.data
       })
     },
-    loadPartyUser() {
-      return api.get('/party_user/' + this.route.params.uid).then((res) => {
+    loadGameUser() {
+      return api.get('/game_user/' + this.route.params.uid).then((res) => {
         this.user.deck = res.data.deck
         this.user.hand = res.data.hand
         this.user.cardDraw = res.data.cardDraw
@@ -328,7 +328,7 @@ export default {
     },
     leave() {
       this.leaveLoading = true
-      api.post('/party/leave', { data: this.route.params.uid, type: PartyHelper.CODE_TYPE_PARTY_ID }).then(() => {
+      api.post('/game/leave', { data: this.route.params.uid, type: GameHelper.CODE_TYPE_GAME_ID }).then(() => {
         this.$router.push({ name: 'home' })
         notify().showPositiveNotify('Vous avez bien quitté la partie')
       }).catch((err) => {
@@ -337,8 +337,8 @@ export default {
       })
     },
     selectCard(card) {
-      console.log(this.party)
-      if (!this.party.myTurn) {
+      console.log(this.game)
+      if (!this.game.myTurn) {
         return
       }
       if (this.selectedCard && this.selectedCard === card) {
@@ -350,7 +350,7 @@ export default {
     },
     clickOnStackInDeck(stackIndex) {
       if ( this.selectedCard && (
-        !this.party.myTurn ||
+        !this.game.myTurn ||
         this.user.cardDraw.uid === this.selectedCard.uid ||
         this.user.deck.some((stack) => stack.some((card) => card.uid === this.selectedCard.uid))
       )) {
@@ -366,10 +366,10 @@ export default {
       const previousDeck = this.user.deck
       const previousHand = this.user.hand
 
-      api.post('/party/move', {
-        partyId: this.party.partyId,
-        from: PartyHelper.MOVE_TYPE_HAND,
-        to: PartyHelper.MOVE_TYPE_DECK,
+      api.post('/game/move', {
+        gameId: this.game.gameId,
+        from: GameHelper.MOVE_TYPE_HAND,
+        to: GameHelper.MOVE_TYPE_DECK,
         cardUid: this.selectedCard.uid,
         toStackIndex: stackIndex
       }).then((res) => {
@@ -378,7 +378,7 @@ export default {
       }).catch((err) => {
         this.user.deck = previousDeck
         this.user.hand = previousHand
-        this.party.myTurn = true
+        this.game.myTurn = true
         translate().showErrorMessage(err.response ? err.response.data.message : err.message)
       })
 
@@ -386,18 +386,18 @@ export default {
       this.user.deck[stackIndex].push(this.selectedCard)
 
       this.selectedCard = null
-      this.party.myTurn = false
+      this.game.myTurn = false
     },
-    selectStackOnPartyStacks(index) {
-      if (this.selectedCard !== null && this.party.myTurn) {
+    selectStackOnGameStacks(index) {
+      if (this.selectedCard !== null && this.game.myTurn) {
         // Récupérer la dernière card de la pile sans la retirer
-        const lastStackCard = this.party.stacks[index].slice(-1)[0]
+        const lastStackCard = this.game.stacks[index].slice(-1)[0]
         const lastStackCardValue = lastStackCard ? lastStackCard.value : 0
         console.log(this.selectedCard)
 
         // Vérifier si la card sélectionnée est +1 par rapport à la card actuelle
         if (this.selectedCard.value === lastStackCardValue + 1) {
-          const previousPartyStack = this.party.stacks
+          const previousGameStack = this.game.stacks
 
           const fromHand = this.user.hand.some((card) => card.uid === this.selectedCard.uid)
           const fromDeck = this.user.deck.some((stack) => stack.some((card) => card.uid === this.selectedCard.uid))
@@ -407,23 +407,23 @@ export default {
             const previousHand = this.user.hand
 
             // API Request
-            api.post('/party/move', {
-              partyId: this.party.partyId,
-              from: PartyHelper.MOVE_TYPE_HAND,
-              to: PartyHelper.MOVE_TYPE_PARTY_STACK,
+            api.post('/game/move', {
+              gameId: this.game.gameId,
+              from: GameHelper.MOVE_TYPE_HAND,
+              to: GameHelper.MOVE_TYPE_GAME_STACK,
               cardUid: this.selectedCard.uid,
               toStackIndex: index
             }).then((res) => {
-              this.party.stacks = res.data.partyStacks
+              this.game.stacks = res.data.gameStacks
               this.user.hand = res.data.hand
             }).catch((err) => {
-              this.party.stacks = previousPartyStack
+              this.game.stacks = previousGameStack
               this.user.hand = previousHand
               translate().showErrorMessage(err.response ? err.response.data.message : err.message)
             })
 
             // Déplacer la card vers la défausse centrale
-            this.party.stacks[index].push(this.selectedCard)
+            this.game.stacks[index].push(this.selectedCard)
 
             // Retirer la card de la main du joueur en la recherchant par son numéro
             const handCardIndex = this.user.hand.findIndex(
@@ -439,24 +439,24 @@ export default {
             const fromStackIndex = this.user.deck.findIndex((stack) => stack.some((card) => card.uid === this.selectedCard.uid))
 
             // API Request
-            api.post('/party/move', {
-              partyId: this.party.partyId,
-              from: PartyHelper.MOVE_TYPE_DECK,
-              to: PartyHelper.MOVE_TYPE_PARTY_STACK,
+            api.post('/game/move', {
+              gameId: this.game.gameId,
+              from: GameHelper.MOVE_TYPE_DECK,
+              to: GameHelper.MOVE_TYPE_GAME_STACK,
               cardUid: this.selectedCard.uid,
               fromStackIndex,
               toStackIndex: index
             }).then((res) => {
-              this.party.stacks = res.data.partyStacks
+              this.game.stacks = res.data.gameStacks
               this.user.deck = res.data.deck
             }).catch((err) => {
-              this.party.stacks = previousPartyStack
+              this.game.stacks = previousGameStack
               this.user.deck = previousDeck
               translate().showErrorMessage(err.response ? err.response.data.message : err.message)
             })
 
-            // Add card to party stack
-            this.party.stacks[index].push(this.selectedCard)
+            // Add card to game stack
+            this.game.stacks[index].push(this.selectedCard)
 
             // Remove card from deck
             this.user.deck[fromStackIndex].pop()
@@ -466,13 +466,13 @@ export default {
             const previousCardDrawCount = this.user.cardDrawCount
 
             // API Request
-            api.post('/party/move', {
-              partyId: this.party.partyId,
-              from: PartyHelper.MOVE_TYPE_PLAYER_CARD_DRAW,
-              to: PartyHelper.MOVE_TYPE_PARTY_STACK,
+            api.post('/game/move', {
+              gameId: this.game.gameId,
+              from: GameHelper.MOVE_TYPE_PLAYER_CARD_DRAW,
+              to: GameHelper.MOVE_TYPE_GAME_STACK,
               toStackIndex: index
             }).then((res) => {
-              this.party.stacks = res.data.partyStacks
+              this.game.stacks = res.data.gameStacks
               this.user.cardDraw = res.data.newCardDraw
               this.user.cardDrawCount = res.data.newCardDrawCount
               if (res.data.win) {
@@ -484,31 +484,21 @@ export default {
               translate().showErrorMessage(err.response ? err.response.data.message : err.message)
             })
 
-            // Add card to party stack
-            this.party.stacks[index].push(this.selectedCard)
+            // Add card to game stack
+            this.game.stacks[index].push(this.selectedCard)
 
           }
 
           this.selectedCard = null
         }
       }
-    },
-    selectCardPiocheCentrale() {
-      if (this.user.hand.length < 5) {
-        this.user.hand.push(this.plateauCentre.cardDraw)
-      }
-    },
-    game() {
-      //cardDraw
-      //joue
-      //dans sa deck 1 seule
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.party {
+.game {
   &__quit {
     &-btn {
       bottom: 10px;

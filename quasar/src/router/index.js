@@ -4,7 +4,7 @@ import routes from './routes'
 import { SessionStorage } from 'quasar'
 import { api } from 'boot/axios'
 import translate from 'src/services/translate'
-import PartyHelper from 'src/helpers/PartyHelper'
+import GameHelper from 'src/helpers/GameHelper'
 
 /*
  * If not building with SSR mode, you can
@@ -44,8 +44,8 @@ export default route(function (/* { store, ssrContext } */) {
         name:
           from.name === 'signin' || to.name === 'signup' ? 'home' : from.name,
       })
-    } else if (isAuthenticated && to.name === 'party' && from.name !== 'partyLobby') {
-      return api.post('/party/check', { data: to.params.uid, type: PartyHelper.CODE_TYPE_PARTY_ID }).then(() => {
+    } else if (isAuthenticated && to.name === 'game' && from.name !== 'gameLobby') {
+      return api.post('/game/check', { data: to.params.uid, type: GameHelper.CODE_TYPE_GAME_ID }).then(() => {
         return next()
       }).catch((err) => {
         translate().showErrorMessage(err.response ? err.response.data.message : err.message)
@@ -53,17 +53,17 @@ export default route(function (/* { store, ssrContext } */) {
           name: from.name || 'home',
         })
       })
-    } else if (isAuthenticated && to.name === 'joinParty') {
-      return api.post('/party/join', { code: to.params.joinCode }).then((res) => {
-        return next({ name: 'partyLobby', params: { uid: res.data.joinCode } })
+    } else if (isAuthenticated && to.name === 'joinGame') {
+      return api.post('/game/join', { code: to.params.joinCode }).then((res) => {
+        return next({ name: 'gameLobby', params: { joinCode: res.data.joinCode } })
       }).catch((err) => {
         translate().showErrorMessage(err.response ? err.response.data.message : err.message)
         return next({
           name: from.name || 'home',
         })
       })
-    } else if (isAuthenticated && to.name === 'partyLobby' && from.name !== 'joinParty') {
-      return api.post('/party/check', { data: to.params.joinCode, type: PartyHelper.CODE_TYPE_JOIN_CODE }).then(() => {
+    } else if (isAuthenticated && to.name === 'gameLobby' && from.name !== 'joinGame') {
+      return api.post('/game/check', { data: to.params.joinCode, type: GameHelper.CODE_TYPE_JOIN_CODE }).then(() => {
         return next()
       }).catch((err) => {
         translate().showErrorMessage(err.response ? err.response.data.message : err.message)

@@ -28,8 +28,8 @@ class UserLeaved implements ShouldBroadcast
      */
     public function __construct(
         User $user,
-        public string $partyId,
-        public string $partyJoinCode
+        public string $gameId,
+        public string $gameJoinCode
     )
     {
         $this->user = [
@@ -45,8 +45,8 @@ class UserLeaved implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('party.' . $this->partyId),
-            new Channel('party.' . $this->partyJoinCode),
+            new Channel('game.' . $this->gameId),
+            new Channel('game.' . $this->gameJoinCode),
         ];
     }
 }

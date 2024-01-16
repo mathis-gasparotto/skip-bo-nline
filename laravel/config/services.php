@@ -4,7 +4,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Third Party Services
+    | Third Game Services
     |--------------------------------------------------------------------------
     |
     | This file is for storing the credentials for third party services such
