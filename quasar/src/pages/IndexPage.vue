@@ -2,7 +2,7 @@
   <q-page class="flex flex-center">
     <q-dialog v-model="showJoinPopup" @hide="joinCode = null">
       <q-card style="min-width: 350px">
-        <q-form @submit="joinParty">
+        <q-form @submit="joinGame">
           <q-card-section>
             <div class="text-h6">Code d'accès</div>
           </q-card-section>
@@ -24,10 +24,10 @@
         </q-form>
       </q-card>
     </q-dialog>
-    <q-banner rounded class="bg-primary text-white" v-if="user.current_party">
+    <q-banner rounded class="bg-primary text-white" v-if="user.current_game">
       Vous avez une partie en cours
       <template v-slot:action>
-        <q-btn flat color="white" label="Rejoindre" @click="$router.push({name: 'party', params: { uid: user.current_party }})" />
+        <q-btn flat color="white" label="Rejoindre" @click="$router.push({name: 'game', params: { uid: user.current_game }})" />
       </template>
     </q-banner>
     <div class="flex column btns">
@@ -35,7 +35,7 @@
       <q-btn @click="showJoinPopup = true">
         Rejoindre une partie
       </q-btn>
-      <q-btn @click="createParty" :loading="createLoading">
+      <q-btn @click="createGame" :loading="createLoading">
         Créer une partie
       </q-btn>
     </div>
@@ -75,27 +75,27 @@ export default {
           translate().showErrorMessage(err.response ? err.response.data.message : err.message)
         })
     },
-    joinParty() {
+    joinGame() {
       this.joinLoading = true
 
-      api.post('/party/join', { code: this.joinCode })
+      api.post('/game/join', { code: this.joinCode })
         .then((res) => {
-          if (res.data.partyId) {
-            return this.$router.push({ name: 'party', params: { uid: res.data.partyId } })
+          if (res.data.gameId) {
+            return this.$router.push({ name: 'game', params: { uid: res.data.gameId } })
           }
-          this.$router.push({ name: 'partyLobby', params: { joinCode: res.data.joinCode } })
+          this.$router.push({ name: 'gameLobby', params: { joinCode: res.data.joinCode } })
         })
         .catch((err) => {
           this.joinLoading = false
           translate().showErrorMessage(err.response ? err.response.data.message : err.message)
         })
     },
-    createParty() {
+    createGame() {
       this.createLoading = true
 
-      api.post('/party/create')
+      api.post('/game/create')
         .then((res) => {
-          this.$router.push({ name: 'partyLobby', params: { joinCode: res.data.joinCode } })
+          this.$router.push({ name: 'gameLobby', params: { joinCode: res.data.joinCode } })
         })
         .catch((err) => {
           this.createLoading = false

@@ -26,18 +26,18 @@ const routes = [
         component: () => import('pages/IndexPage.vue')
       },
       {
-        path: 'party/join/:joinCode',
-        name: 'joinParty',
+        path: 'game/join/:joinCode',
+        name: 'joinGame',
       },
       {
-        path: 'party/:joinCode/lobby/',
-        name: 'partyLobby',
-        component: () => import('pages/PartyLobbyPage.vue')
+        path: 'game/:joinCode/lobby/',
+        name: 'gameLobby',
+        component: () => import('pages/GameLobbyPage.vue')
       },
       {
-        path: 'party/:uid',
-        name: 'party',
-        component: () => import("pages/PartyPage.vue")
+        path: 'game/:uid',
+        name: 'game',
+        component: () => import("pages/GamePage.vue")
       }
     ]
   },

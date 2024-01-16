@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\Helper\PartyHelper;
+use App\Helper\GameHelper;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -11,7 +11,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Queue\SerializesModels;
 
-class PartyStarted implements ShouldBroadcast
+class GameStarted implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -19,9 +19,9 @@ class PartyStarted implements ShouldBroadcast
      * Create a new event instance.
      */
     public function __construct(
-        public string $partyJoinCode,
+        public string $gameJoinCode,
         public string|int $userId,
-        public string $partyId
+        public string $gameId
     )
     {}
 
@@ -33,7 +33,7 @@ class PartyStarted implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('party.' . $this->partyJoinCode . '.started.' . $this->userId),
+            new Channel('game.' . $this->gameJoinCode . '.started.' . $this->userId),
         ];
     }
 }

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  *
  */
-class Party extends Model
+class Game extends Model
 {
     use HasFactory;
     use HasUuids;
@@ -53,9 +53,9 @@ class Party extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function partyUsers()
+    public function gameUsers()
     {
-        return $this->hasMany(PartyUser::class);
+        return $this->hasMany(GameUser::class);
     }
 
     /**
@@ -63,6 +63,6 @@ class Party extends Model
      */
     public function getUserCount(): int
     {
-        return $this->partyUsers()->count();
+        return $this->gameUsers()->count();
     }
 }

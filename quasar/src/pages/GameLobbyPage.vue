@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-center">
-    <q-dialog v-model="showLeavePartyModal">
+    <q-dialog v-model="showLeaveGameModal">
       <q-card style="min-width: 350px">
         <q-card-section>
           Voulez-vous vraiment quitter la partie ?
@@ -15,9 +15,9 @@
     <div class="container">
       Oui
     </div>
-    <q-btn class="party__quit-btn q-mt-md q-mr-lg fixed" color="red" icon="logout"
-      round size="15px" @click.prevent="showLeavePartyModal = true" />
-    <q-btn class="party__share-btn q-mt-md q-ml-lg fixed" color="primary" icon="share"
+    <q-btn class="game__quit-btn q-mt-md q-mr-lg fixed" color="red" icon="logout"
+      round size="15px" @click.prevent="showLeaveGameModal = true" />
+    <q-btn class="game__share-btn q-mt-md q-ml-lg fixed" color="primary" icon="share"
       round size="15px" @click.prevent="share()" />
   </q-page>
 </template>
@@ -29,15 +29,15 @@ import { api } from 'boot/axios'
 import notify from 'src/services/notify'
 import { Share } from '@capacitor/share'
 import translate from 'src/services/translate'
-import PartyHelper from 'src/helpers/PartyHelper'
+import GameHelper from 'src/helpers/GameHelper'
 
 export default {
-  name: 'PartyLobbyPage',
+  name: 'GameLobbyPage',
   setup() {
     const route = useRoute()
     const router = useRouter()
 
-    window.Echo.channel('party.' + route.params.joinCode)
+    window.Echo.channel('game.' + route.params.joinCode)
       .listen('UserJoined', (e) => {
         console.log('User Joined!', e.user)
       })
@@ -45,9 +45,9 @@ export default {
         console.log('User Leaved', e.user)
       })
 
-    window.Echo.channel('party.' + route.params.joinCode + '.started.' + SessionStorage.getItem('user')?.id)
-      .listen('PartyStarted', (e) => {
-        router.push({ name: 'party', params: { uid: e.partyId } })
+    window.Echo.channel('game.' + route.params.joinCode + '.started.' + SessionStorage.getItem('user')?.id)
+      .listen('GameStarted', (e) => {
+        router.push({ name: 'game', params: { uid: e.gameId } })
       })
 
     return {
@@ -56,7 +56,7 @@ export default {
   },
   data() {
     return {
-      showLeavePartyModal: false,
+      showLeaveGameModal: false,
       leaveLoading: false
     }
   },
@@ -65,13 +65,13 @@ export default {
       Share.share({
         title: 'Inviter un ami',
         text: 'Clique sur le lien ci-dessous, ou rend toi sur l\'application Skip-Bo\'nline et rentre le code d\'accès suivant : ' + this.route.params.joinCode,
-        url: `https://skip-bo.online/#/party/join/${this.route.params.joinCode}`,
+        url: `https://skip-bo.online/#/game/join/${this.route.params.joinCode}`,
         dialogTitle: 'Inviter un ami'
       })
     },
     leave() {
       this.leaveLoading = true
-      api.post('/party/leave', { data: this.route.params.joinCode, type: PartyHelper.CODE_TYPE_JOIN_CODE }).then(() => {
+      api.post('/game/leave', { data: this.route.params.joinCode, type: GameHelper.CODE_TYPE_JOIN_CODE }).then(() => {
         this.$router.push({ name: 'home' })
         notify().showPositiveNotify('Vous avez bien quitté la partie')
       }).catch((err) => {
@@ -84,7 +84,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.party {
+.game {
   &__quit {
     &-btn {
       bottom: 10px;

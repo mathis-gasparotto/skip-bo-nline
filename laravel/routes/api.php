@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\SanctumAuthenticatedSessionController;
-use App\Http\Controllers\PartyController;
+use App\Http\Controllers\GameController;
 use App\Http\Controllers\ResetInfosUsers;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -30,14 +30,14 @@ Route::prefix('users/me')->middleware(['auth:sanctum'])->group(function () {
     Route::post('reset-password', [ResetInfosUsers::class,'password']);
 });
 
-Route::middleware(['auth:sanctum'])->get('party_user/{uuid}', [PartyController::class, 'getPartyUser']);
-Route::prefix('party')->middleware(['auth:sanctum'])->group(function () {
-    Route::post('check', [PartyController::class, 'check']);
-    Route::post('join', [PartyController::class, 'join']);
-    Route::post('start', [PartyController::class, 'start']);
-    Route::post('leave', [PartyController::class, 'leave']);
-    Route::post('move', [PartyController::class, 'move']);
-    Route::post('create', [PartyController::class, 'create']);
-    Route::get('/join-code/{code}', [PartyController::class, 'get']);
-    Route::get('/{uuid}', [PartyController::class, 'get']);
+Route::middleware(['auth:sanctum'])->get('game_user/{uuid}', [GameController::class, 'getGameUser']);
+Route::prefix('game')->middleware(['auth:sanctum'])->group(function () {
+    Route::post('check', [GameController::class, 'check']);
+    Route::post('join', [GameController::class, 'join']);
+    Route::post('start', [GameController::class, 'start']);
+    Route::post('leave', [GameController::class, 'leave']);
+    Route::post('move', [GameController::class, 'move']);
+    Route::post('create', [GameController::class, 'create']);
+    Route::get('/join-code/{code}', [GameController::class, 'get']);
+    Route::get('/{uuid}', [GameController::class, 'get']);
 });
