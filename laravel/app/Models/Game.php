@@ -63,6 +63,14 @@ class Game extends Model
      */
     public function getUserCount(): int
     {
+        return $this->gameUsers()->count();
+    }
+
+    /**
+     * @return int
+     */
+    public function getCurrentUserCount(): int
+    {
         return $this->currentUsers()->count();
     }
 }

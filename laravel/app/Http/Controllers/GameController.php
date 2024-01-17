@@ -38,6 +38,7 @@ class GameController extends Controller
         $toReturn = [
             'gameId' => $game->id,
             'joinCode' => $game->join_code,
+            'cardDrawCount' => $game->card_draw_count,
             'author' => $game->author()->get(),
         ];
 
@@ -69,6 +70,37 @@ class GameController extends Controller
         }
 
         return new JsonResponse($toReturn);
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function update(Request $request): JsonResponse
+    {
+        if ($request->route('uuid')) {
+            $game = $this->gameService->getGame($request->route('uuid'));
+        } else if ($request->route('code')) {
+            $game = $this->gameService->getGame($request->route('code'), GameHelper::CODE_TYPE_JOIN_CODE);
+        } else {
+            throw new \Exception('Game not found', 404);
+        }
+
+        if ($game->author_id !== $request->user()->id) {
+            throw new \Exception('You\'re not the host of this game', 403);
+        }
+
+        if ($request->input('cardDrawCount') && $game->status === GameHelper::STATUS_PENDING) {
+            $game->card_draw_count = $request->input('cardDrawCount');
+            $game->save();
+        }
+
+        return new JsonResponse([
+            'id' => $game->id,
+            'joinCode' => $game->join_code,
+            'cardDrawCount' => $game->card_draw_count
+        ]);
     }
 
     /**

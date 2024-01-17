@@ -14,7 +14,7 @@ final class GameHelper
     public const STATUS_FINISHED = 'finished';
 
     /** @var string  */
-    public const CARD_DRAW_COUNT = 5;
+    public const DEFAULT_CARD_DRAW_COUNT = 5;
 
     /** @var string[]  */
     public const GAME_STATUS = [
