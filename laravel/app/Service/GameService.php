@@ -32,6 +32,9 @@ class GameService
 
         $gameUsers = $game->gameUsers()->get();
         foreach ($gameUsers as $gameUser) {
+            $gameUser->card_draw_count = $game->card_draw_count;
+            $gameUser->save();
+
             $user = $gameUser->user;
             $user->setCurrentGame($game);
             $this->generateCardsOnStartForUser($gameUser);
@@ -90,7 +93,7 @@ class GameService
             $userGame->save();
             $user->deleteCurrentGame();
 
-            if ($game->getUserCount() <= 1) {
+            if ($game->getCurrentUserCount() <= 1) {
                 $gameEnded = true;
 
                 $lastUser = $game->currentUsers()->first();
@@ -118,7 +121,7 @@ class GameService
      */
     public function createGame(User $user): Game
     {
-        $card_draw_count = GameHelper::CARD_DRAW_COUNT;
+        $card_draw_count = GameHelper::DEFAULT_CARD_DRAW_COUNT;
 
         $game = new Game([
             'join_code' => $this->generateJoinCode(),
@@ -213,7 +216,6 @@ class GameService
 
             $gameUser->hand = json_encode(array());
             $gameUser->deck = json_encode([array(), array(), array(), array()]);
-            $gameUser->card_draw_count = $game->card_draw_count;
             $gameUser->card_draw = null;
             $gameUser->save();
         }

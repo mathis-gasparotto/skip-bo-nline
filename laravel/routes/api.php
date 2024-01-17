@@ -39,5 +39,6 @@ Route::prefix('game')->middleware(['auth:sanctum'])->group(function () {
     Route::post('move', [GameController::class, 'move']);
     Route::post('create', [GameController::class, 'create']);
     Route::get('/join-code/{code}', [GameController::class, 'get']);
+    Route::put('/join-code/{code}', [GameController::class, 'update']);
     Route::get('/{uuid}', [GameController::class, 'get']);
 });
