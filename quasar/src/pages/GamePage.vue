@@ -84,12 +84,6 @@
     <div class="plateau-center">
       <div class="cardDraw-joueurs">
         <div class="card">
-          <!-- <img
-            @click="selectCardPiocheCentrale()"
-            class="image-card"
-            src="/assets/skipbo.png"
-            alt="cardDraw"
-          /> -->
           <img
             class="image-card"
             src="/assets/skipbo.png"
@@ -748,8 +742,25 @@ export default {
     }
   }
 }
-.image-card-deck-center {
-  position: absolute;
+.deck-joueurs {
+  .card {
+    .image-card-deck-center {
+      position: absolute;
+
+      &:nth-child(5n) {
+        transform: translateX(-3px) translateY(-2px);
+      }
+      &:nth-child(5n+2) {
+        transform: translateX(-2px) translateY(+3px);
+      }
+      &:nth-child(5n+3) {
+        transform: translateX(+3px) translateY(-2px);
+      }
+      &:nth-child(5n+4) {
+        transform: translateX(-2px) translateY(+3px);
+      }
+    }
+  }
 }
 
 .cardDraw-autre-joueur .card {
