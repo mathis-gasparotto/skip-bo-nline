@@ -65,7 +65,7 @@ export default {
       Share.share({
         title: 'Inviter un ami',
         text: 'Clique sur le lien ci-dessous, ou rend toi sur l\'application Skip-Bo\'nline et rentre le code d\'accès suivant : ' + this.route.params.joinCode,
-        url: `https://skip-bo.online/#/game/join/${this.route.params.joinCode}`,
+        url: `https://skip-bo.online/game/join/${this.route.params.joinCode}`,
         dialogTitle: 'Inviter un ami'
       })
     },
