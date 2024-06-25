@@ -104,13 +104,22 @@ git clone https://github.com/mathis-gasparotto/skip-bo-nline.git #Si besoin
 cd skip-bo-nline/quasar/
 ```
 
-2. Installez les dépendances npm :
+2. Copiez le fichier `.env.example` en `.env`
+
+3. Définissez les informations Pusher dans le fichier `.env`
+
+```bash
+VUE_PUSHER_APP_KEY=00000000000000
+VUE_PUSHER_APP_CLUSTER=eu
+```
+
+4. Installez les dépendances npm :
 
 ```bash
 npm install
 ```
 
-3. Lancez le serveur de dev :
+5. Lancez le serveur de dev :
 ```bash
 npm run dev
 ````
