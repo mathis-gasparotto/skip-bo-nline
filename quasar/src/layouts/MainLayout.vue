@@ -30,12 +30,14 @@
 
 <script>
 import { SessionStorage } from 'quasar'
+import { api } from 'boot/axios'
 
 export default {
   name: 'MainLayout',
   methods: {
     logout() {
       SessionStorage.remove('token')
+      api.defaults.headers.common.Authorization = ''
       SessionStorage.remove('user')
       this.$router.push({ name: 'signin' })
     }

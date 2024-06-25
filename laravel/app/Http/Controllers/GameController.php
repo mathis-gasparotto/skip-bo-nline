@@ -39,7 +39,7 @@ class GameController extends Controller
             'gameId' => $game->id,
             'joinCode' => $game->join_code,
             'cardDrawCount' => $game->card_draw_count,
-            'author' => $game->author()->get(),
+            'author' => $game->author()->first(),
         ];
 
         if ($game->status === GameHelper::STATUS_STARTED && $request->user()->currentGame == $game) {
