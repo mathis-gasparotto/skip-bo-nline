@@ -115,6 +115,7 @@ export default {
           }
           api.post('/login', payload).then((response) => {
             SessionStorage.set('token', response.data.token)
+            api.defaults.headers.common.Authorization = `Bearer ${response.data.token}`
             SessionStorage.set('user', response.data.user)
             this.$router.push({ name: 'home' })
             notify().showPositiveNotify('Vous êtes désormais connecté')
