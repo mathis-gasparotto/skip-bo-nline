@@ -1,5 +1,7 @@
 # Skip-Bo
 
+*---by GURNAUD Jade, PLANCHE Nicolas, GASPAROTTO Mathis---*
+
 Bienvenue dans notre implémentation du jeu de cartes Skip-Bo !
 
 ## Description
